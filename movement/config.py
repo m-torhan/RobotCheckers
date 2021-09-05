@@ -10,3 +10,10 @@ pin_motor_B_dir   = 5
 
 pin_magnet        = 12
 pin_servo         = 13
+
+steps_per_cm      = 10  # to be configured
+
+max_speed         = 200
+acceleration      = 10
+
+board_pos         = [10, 10, 100, 100] # to be configured
