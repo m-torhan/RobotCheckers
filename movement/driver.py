@@ -40,7 +40,7 @@ class MovementHandler(object):
         self.__run = True
         self.__instr_list = []
         self.__instr_handler_thread = threading.Thread(target=self.__instr_handler)
-        self.__speed = 1000
+        self.__speed = 2000
 
     @property
     def pos(self):
@@ -202,24 +202,168 @@ class MovementHandler(object):
         self.__pos[1] -= 1
 
     def __move_to_inner(self, x, y):
-        delta_x = abs(x - self.pos[0])
-        delta_y = abs(y - self.pos[1])
+        if x < self.__X_range[0]:
+            x = self.__X_range[0]
+        if x > self.__X_range[1]:
+            x = self.__X_range[1]
+
+        if y < self.__Y_range[0]:
+            y = self.__Y_range[0]
+        if y > self.__Y_range[1]:
+            y = self.__Y_range[1]
+
+        delta_x = x - self.pos[0]
+        delta_y = y - self.pos[1]
+
+        a_dir = 0
+        b_dir = 0
+
+        a_const = False
+        b_const = False
+
+        if delta_x == 0 and delta_y == 0:
+            return
+
+        if delta_x == 0:
+            if delta_y < 0:
+                a_dir = 1
+                b_dir = -1
+            else:
+                a_dir = -1
+                b_dir = 1
+        elif delta_y == 0:
+            if delta_x < 0:
+                a_dir = -1
+                b_dir = -1
+            else:
+                a_dir = 1
+                b_dir = 1
+        else:
+            if delta_x < 0:
+                if delta_y < 0:
+                    b_const = True
+                    b_dir = -1
+                    if delta_x < delta_y:
+                        a_dir = 1
+                    elif delta_x > delta_y:
+                        a_dir = -1
+                    else:
+                        a_dir = 0
+                else:
+                    a_const = True
+                    a_dir = 1
+                    if delta_x < delta_y:
+                        b_dir = 1
+                    elif delta_x > delta_y:
+                        b_dir = -1
+                    else:
+                        b_dir = 0
+            else:
+                if delta_y < 0:
+                    a_const = True
+                    a_dir = -1
+                    if delta_x < delta_y:
+                        b_dir = -1
+                    elif delta_x > delta_y:
+                        b_dir = +1
+                    else:
+                        b_dir = 0
+                else:
+                    b_const = True
+                    b_dir = 1
+                    if delta_x < delta_y:
+                        a_dir = -1
+                    elif delta_x > delta_y:
+                        a_dir = 1
+                    else:
+                        a_dir = 0
+
+        if a_dir != 0:
+            GPIO.output(config.pin_motor_A_dir, GPIO.HIGH if a_dir == 1 else GPIO.LOW)
+        
+        if b_dir != 0:
+            GPIO.output(config.pin_motor_B_dir, GPIO.HIGH if b_dir == 1 else GPIO.LOW)
 
         p = [0, 0]
 
-        for _ in range(delta_x + delta_y):
-            if delta_y - p[1] == 0 or delta_x*p[1] - delta_y*p[0] > 0:
-                if x > self.pos[0]:
-                    self.__step_X_forward_inner()
+        if b_dir == 0:
+            while p[0] != 2*delta_x or p[1] != 2*delta_y:
+                GPIO.output(config.pin_motor_A_step, GPIO.HIGH)
+                time.sleep(1./self.__speed)
+                GPIO.output(config.pin_motor_A_step, GPIO.LOW)
+                time.sleep(1./self.__speed)
+
+                p[0] += a_dir
+                p[1] += -a_dir
+
+        elif a_dir == 0:
+            while p[0] != 2*delta_x or p[1] != 2*delta_y:
+                GPIO.output(config.pin_motor_B_step, GPIO.HIGH)
+                time.sleep(1./self.__speed)
+                GPIO.output(config.pin_motor_B_step, GPIO.LOW)
+                time.sleep(1./self.__speed)
+
+                p[0] += b_dir
+                p[1] += b_dir
+        
+        elif delta_x == 0 or delta_y == 0:
+            while p[0] != 2*delta_x or p[1] != 2*delta_y:
+                GPIO.output(config.pin_motor_B_step, GPIO.HIGH)
+                time.sleep(1./self.__speed)
+                GPIO.output(config.pin_motor_B_step, GPIO.LOW)
+                time.sleep(1./self.__speed)
+
+                p[0] += b_dir
+                p[1] += b_dir
+
+                GPIO.output(config.pin_motor_A_step, GPIO.HIGH)
+                time.sleep(1./self.__speed)
+                GPIO.output(config.pin_motor_A_step, GPIO.LOW)
+                time.sleep(1./self.__speed)
+
+                p[0] += a_dir
+                p[1] += -a_dir
+
+        elif a_const:
+            while p[0] != 2*delta_x or p[1] != 2*delta_y:
+                if (delta_x - delta_y)*(delta_x*p[1] - delta_y*p[0]) > 0:
+                    GPIO.output(config.pin_motor_B_step, GPIO.HIGH)
+                    time.sleep(1./self.__speed)
+                    GPIO.output(config.pin_motor_B_step, GPIO.LOW)
+                    time.sleep(1./self.__speed)
+
+                    p[0] += b_dir
+                    p[1] += b_dir
                 else:
-                    self.__step_X_backward_inner()
-                p[0] += 1
-            else:
-                if y > self.pos[1]:
-                    self.__step_Y_forward_inner()
+                    GPIO.output(config.pin_motor_A_step, GPIO.HIGH)
+                    time.sleep(1./self.__speed)
+                    GPIO.output(config.pin_motor_A_step, GPIO.LOW)
+                    time.sleep(1./self.__speed)
+
+                    p[0] += a_dir
+                    p[1] += -a_dir
+
+        elif b_const:
+            while p[0] != 2*delta_x or p[1] != 2*delta_y:
+                if (delta_x - delta_y)*(delta_x*p[1] - delta_y*p[0]) > 0:
+                    GPIO.output(config.pin_motor_A_step, GPIO.HIGH)
+                    time.sleep(1./self.__speed)
+                    GPIO.output(config.pin_motor_A_step, GPIO.LOW)
+                    time.sleep(1./self.__speed)
+
+                    p[0] += a_dir
+                    p[1] += -a_dir
                 else:
-                    self.__step_Y_backward_inner()
-                p[1] += 1
+                    GPIO.output(config.pin_motor_B_step, GPIO.HIGH)
+                    time.sleep(1./self.__speed)
+                    GPIO.output(config.pin_motor_B_step, GPIO.LOW)
+                    time.sleep(1./self.__speed)
+                    
+                    p[0] += b_dir
+                    p[1] += b_dir
+
+        self.__pos[0] = x
+        self.__pos[1] = y
 
     def __move_to_square_inner(self, row, col):
         if row < 0 or row > 7:
@@ -239,29 +383,65 @@ class MovementHandler(object):
     def __calibrate_inner(self):
         self.__X_range = [-float('inf'), float('inf')]
         # calibrate X max
+        self.__speed = config.max_speed
+        while not GPIO.input(config.pin_endstop_X_max):
+            self.__step_X_forward_inner()
+        
+        self.__speed = config.max_speed/8
+        for _ in range(config.steps_per_cm):
+            self.__step_X_backward_inner()
+            
         while not GPIO.input(config.pin_endstop_X_max):
             self.__step_X_forward_inner()
          
         # calibrate X min
         X_range = 0
+        self.__speed = config.max_speed
         while not GPIO.input(config.pin_endstop_X_min):
             self.__step_X_backward_inner()
             X_range += 1
         
+        self.__speed = config.max_speed/8
+        for _ in range(config.steps_per_cm):
+            self.__step_X_forward_inner()
+            X_range -= 1
+        
+        while not GPIO.input(config.pin_endstop_X_min):
+            self.__step_X_backward_inner()
+            X_range += 1
+
         self.__pos[0] = 0
         self.__X_range = [0, X_range]
 
         self.__Y_range = [-float('inf'), float('inf')]
         # calibrate Y max
+        self.__speed = config.max_speed
+        while not GPIO.input(config.pin_endstop_Y_max):
+            self.__step_Y_forward_inner()
+
+        self.__speed = config.max_speed/8
+        for _ in range(config.steps_per_cm):
+            self.__step_Y_backward_inner()
+            
         while not GPIO.input(config.pin_endstop_Y_max):
             self.__step_Y_forward_inner()
 
         # calibrate Y min
         Y_range = 0
+        self.__speed = config.max_speed
         while not GPIO.input(config.pin_endstop_Y_min):
             self.__step_Y_backward_inner()
             Y_range += 1
         
+        self.__speed = config.max_speed/8
+        for _ in range(config.steps_per_cm):
+            self.__step_Y_forward_inner()
+            Y_range -= 1
+            
+        while not GPIO.input(config.pin_endstop_Y_min):
+            self.__step_Y_backward_inner()
+            Y_range += 1
+
         self.__pos[1] = 0
         self.__Y_range = [0, Y_range]
 
