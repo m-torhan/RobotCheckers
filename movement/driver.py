@@ -31,7 +31,8 @@ class MovementHandler(object):
 
         GPIO.setup(config.pin_servo, GPIO.OUT)
         
-        GPIO.output(config.pin_servo, GPIO.LOW)
+        self.__servo_pwm = GPIO.PWM(config.pin_servo, 50)
+        self.__servo_pwm.start(0)
 
         self.__pos = [0, 0]
         self.__X_range = 0
@@ -44,23 +45,19 @@ class MovementHandler(object):
 
     @property
     def pos(self):
-        return self.__pos
+        return (self.__pos[0]/config.steps_per_cm, self.__pos[1]/config.steps_per_cm)
 
     @property
     def X_range(self):
-        return self.__X_range
+        return (self.__X_range[0]/config.steps_per_cm, self.__X_range[1]/config.steps_per_cm)
 
     @property
     def Y_range(self):
-        return self.__Y_range
+        return (self.__Y_range[0]/config.steps_per_cm, self.__Y_range[1]/config.steps_per_cm)
     
     @property
     def calibrated(self):
         return self.__calibrated
-    
-    @property
-    def instr_count(self):
-        return len(self.__instr_list)
 
     def start(self):
         self.__instr_handler_thread.start()
@@ -69,6 +66,8 @@ class MovementHandler(object):
         self.__run = False
 
         self.__instr_handler_thread.join()
+
+        self.__servo_pwm.stop()
 
         GPIO.cleanup()
 
@@ -97,16 +96,22 @@ class MovementHandler(object):
         self.__instr_list.append(f'syb')
     
     def move_to(self, x, y):
-        self.__instr_list.append(f'mv {x} {y}')
+        self.__instr_list.append(f'mt {x} {y}')
 
     def move_to_square(self, row, col):
-        self.__instr_list.append(f'mv_sq {row} {col}')
+        self.__instr_list.append(f'mts {row} {col}')
     
     def set_magnet(self, state):
-        self.__instr_list.append(f's_m {state}')
+        self.__instr_list.append(f'sm {state}')
 
-    def set_servo(self, state):
-        self.__instr_list.append(f's_s {state}')
+    def set_servo(self, value):
+        self.__instr_list.append(f'ss {value}')
+    
+    def put_pawn(self):
+        self.__instr_list.append(f'pp')
+
+    def take_pawn(self):
+        self.__instr_list.append(f'tp')
 
     def calibrate(self):
         self.__instr_list.append(f'c')
@@ -116,10 +121,10 @@ class MovementHandler(object):
             if len(self.__instr_list):
                 try:
                     instr = self.__instr_list.pop(0).split()
-                    if instr[0] == 'mv':
-                        self.__move_to_inner(int(instr[1]), int(instr[2]))
+                    if instr[0] == 'mt':
+                        self.__move_to_inner(float(instr[1]), int(float[2]))
 
-                    elif instr[0] == 'mv_sq':
+                    elif instr[0] == 'mts':
                         self.__move_to_square_inner(int(instr[1]), int(instr[2]))
                     
                     elif instr[0] == 'sxf':
@@ -134,11 +139,17 @@ class MovementHandler(object):
                     elif instr[0] == 'syb':
                         self.__step_Y_backward_inner()
                     
-                    elif instr[0] == 's_m':
+                    elif instr[0] == 'sm':
                         self.__set_magnet_inner(int(instr[1]))
                         
-                    elif instr[0] == 's_s':
+                    elif instr[0] == 'ss':
                         self.__set_servo_inner(int(instr[1]))
+                        
+                    elif instr[0] == 'pp':
+                        self.__put_pawn_inner()
+                        
+                    elif instr[0] == 'tp':
+                        self.__take_pawn_inner()
 
                     elif instr[0] == 'c':
                         self.__calibrate_inner()
@@ -202,18 +213,21 @@ class MovementHandler(object):
         self.__pos[1] -= 1
 
     def __move_to_inner(self, x, y):
-        if x < self.__X_range[0]:
-            x = self.__X_range[0]
-        if x > self.__X_range[1]:
-            x = self.__X_range[1]
+        step_x = int(x*config.steps_per_cm)
+        step_y = int(y*config.steps_per_cm)
 
-        if y < self.__Y_range[0]:
-            y = self.__Y_range[0]
-        if y > self.__Y_range[1]:
-            y = self.__Y_range[1]
+        if step_x < self.__X_range[0]:
+            step_x = self.__X_range[0]
+        if step_x > self.__X_range[1]:
+            step_x = self.__X_range[1]
 
-        delta_x = x - self.pos[0]
-        delta_y = y - self.pos[1]
+        if step_y < self.__Y_range[0]:
+            step_y = self.__Y_range[0]
+        if step_y > self.__Y_range[1]:
+            step_y = self.__Y_range[1]
+
+        delta_x = step_x - self.pos[0]
+        delta_y = step_y - self.pos[1]
 
         a_dir = 0
         b_dir = 0
@@ -377,8 +391,26 @@ class MovementHandler(object):
     def __set_magnet_inner(self, state):
         GPIO.output(config.pin_magnet, GPIO.HIGH if state else GPIO.LOW)
 
-    def __set_servo_inner(self, state):
-        GPIO.output(config.pin_servo, GPIO.HIGH if state else GPIO.LOW)
+    def __set_servo_inner(self, value):
+        self.__servo_pwm.ChangeDutyCycle(value)
+
+    def __put_pawn_inner(self):
+        self.__set_servo_inner(2)
+        time.sleep(1.2)
+        self.__set_magnet_inner(0)
+        time.sleep(.5)
+        self.__set_servo_inner(12)
+        # time.sleep(1.2)
+        # self.__set_servo_inner(0)
+
+    def __take_pawn_inner(self):
+        self.__set_servo_inner(2)
+        time.sleep(1.2)
+        self.__set_magnet_inner(1)
+        time.sleep(.5)
+        self.__set_servo_inner(12)
+        # time.sleep(1.2)
+        # self.__set_servo_inner(0)
 
     def __calibrate_inner(self):
         self.__X_range = [-float('inf'), float('inf')]
@@ -447,5 +479,5 @@ class MovementHandler(object):
 
     def __log(self, log):
         with open('logs/movement_handler.txt', 'a') as log_file:
-            log = log.replace('\n', ' ').replace('\r', ' ')
+            log = log.replace('\n', '\n  ')
             log_file.write(f'{datetime.datetime.now().strftime("%d_%m_%Y_%H_%M_%S")} {log}\n')
