@@ -122,7 +122,7 @@ class MovementHandler(object):
                 try:
                     instr = self.__instr_list.pop(0).split()
                     if instr[0] == 'mt':
-                        self.__move_to_inner(float(instr[1]), int(float[2]))
+                        self.__move_to_inner(float(instr[1]), float(instr[2]))
 
                     elif instr[0] == 'mts':
                         self.__move_to_square_inner(int(instr[1]), int(instr[2]))
@@ -226,8 +226,8 @@ class MovementHandler(object):
         if step_y > self.__Y_range[1]:
             step_y = self.__Y_range[1]
 
-        delta_x = step_x - self.pos[0]
-        delta_y = step_y - self.pos[1]
+        delta_x = step_x - self.__pos[0]
+        delta_y = step_y - self.__pos[1]
 
         a_dir = 0
         b_dir = 0
@@ -376,8 +376,8 @@ class MovementHandler(object):
                     p[0] += b_dir
                     p[1] += b_dir
 
-        self.__pos[0] = x
-        self.__pos[1] = y
+        self.__pos[0] = step_x
+        self.__pos[1] = step_y
 
     def __move_to_square_inner(self, row, col):
         if row < 0 or row > 7:
@@ -419,10 +419,10 @@ class MovementHandler(object):
         while not GPIO.input(config.pin_endstop_X_max):
             self.__step_X_forward_inner()
         
-        self.__speed = config.max_speed/8
         for _ in range(config.steps_per_cm):
             self.__step_X_backward_inner()
             
+        self.__speed = config.max_speed/8
         while not GPIO.input(config.pin_endstop_X_max):
             self.__step_X_forward_inner()
          
@@ -433,11 +433,11 @@ class MovementHandler(object):
             self.__step_X_backward_inner()
             X_range += 1
         
-        self.__speed = config.max_speed/8
         for _ in range(config.steps_per_cm):
             self.__step_X_forward_inner()
             X_range -= 1
         
+        self.__speed = config.max_speed/8
         while not GPIO.input(config.pin_endstop_X_min):
             self.__step_X_backward_inner()
             X_range += 1
@@ -451,10 +451,10 @@ class MovementHandler(object):
         while not GPIO.input(config.pin_endstop_Y_max):
             self.__step_Y_forward_inner()
 
-        self.__speed = config.max_speed/8
         for _ in range(config.steps_per_cm):
             self.__step_Y_backward_inner()
             
+        self.__speed = config.max_speed/8
         while not GPIO.input(config.pin_endstop_Y_max):
             self.__step_Y_forward_inner()
 
@@ -465,17 +465,19 @@ class MovementHandler(object):
             self.__step_Y_backward_inner()
             Y_range += 1
         
-        self.__speed = config.max_speed/8
         for _ in range(config.steps_per_cm):
             self.__step_Y_forward_inner()
             Y_range -= 1
             
+        self.__speed = config.max_speed/8
         while not GPIO.input(config.pin_endstop_Y_min):
             self.__step_Y_backward_inner()
             Y_range += 1
 
         self.__pos[1] = 0
         self.__Y_range = [0, Y_range]
+
+        self.__speed = config.max_speed
 
     def __log(self, log):
         with open('logs/movement_handler.txt', 'a') as log_file:
