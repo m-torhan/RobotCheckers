@@ -13,7 +13,7 @@ pin_servo         = 13
 
 steps_per_cm      = 50
 
-max_speed         = 2000
+max_speed         = 1500
 acceleration      = 10
 
-board_pos         = [10, 10, 100, 100] # to be configured
+board_pos         = {'x': (0, 21), 'y': (12, 33)}
