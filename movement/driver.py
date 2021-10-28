@@ -113,8 +113,11 @@ class MovementHandler(object):
     def take_pawn(self):
         self.__instr_list.append(f'tp')
     
-    def move_pawn_from_to(self, from_x, from_y, to_x, to_y):
-        self.__instr_list.append(f'mpft {from_x} {from_y} {to_x} {to_y}')
+    def move_pawn_from_square_to_square(self, from_col, from_row, to_col, to_row):
+        self.__instr_list.append(f'mpfsts {from_col} {from_row} {to_col} {to_row}')
+
+    def move_pawn_from_square_to(self, from_col, from_row, to_col, to_row):
+        self.__instr_list.append(f'mpfst {from_col} {from_row} {to_col} {to_row}')
 
     def calibrate(self):
         self.__instr_list.append(f'c')
@@ -154,8 +157,11 @@ class MovementHandler(object):
                     elif instr[0] == 'tp':
                         self.__take_pawn_inner()
                         
-                    elif instr[0] == 'mpft':
-                        self.__move_pawn_from_to_inner(int(instr[1]), int(instr[2]), int(instr[3]), int(instr[4]))
+                    elif instr[0] == 'mpfsts':
+                        self.__move_pawn_from_square_to_square_inner(int(instr[1]), int(instr[2]), int(instr[3]), int(instr[4]))
+                        
+                    elif instr[0] == 'mpfst':
+                        self.__move_pawn_from_square_to_square_inner(int(instr[1]), int(instr[2]), float(instr[3]), float(instr[4]))
 
                     elif instr[0] == 'c':
                         self.__calibrate_inner()
@@ -369,11 +375,19 @@ class MovementHandler(object):
 
         self.__speed = config.max_speed
 
-    def __move_pawn_from_to_inner(self, from_x, from_y, to_x, to_y):
+    def __move_pawn_from_square_to_square_inner(self, from_col, from_row, to_col, to_row):
         self.__set_servo_inner(12)
-        self.__move_to_square_inner(from_x, from_y)
+        self.__move_to_square_inner(from_col, from_row)
         self.__take_pawn_inner()
-        self.__move_to_square_inner(to_x, to_y)
+        self.__move_to_square_inner(to_col, to_row)
+        self.__put_pawn_inner()
+        self.__set_servo_inner(12)
+    
+    def __move_pawn_from_square_to_inner(self, from_col, from_row, to_x, to_y):
+        self.__set_servo_inner(12)
+        self.__move_to_square_inner(from_col, from_row)
+        self.__take_pawn_inner()
+        self.__move_to_inner(to_x, to_y)
         self.__put_pawn_inner()
         self.__set_servo_inner(12)
 
