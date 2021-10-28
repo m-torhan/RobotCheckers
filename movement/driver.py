@@ -95,8 +95,8 @@ class MovementHandler(object):
     def step_Y_backward(self):
         self.__instr_list.append(f'syb')
     
-    def move_to(self, x, y):
-        self.__instr_list.append(f'mt {x} {y}')
+    def move_to_pos(self, x, y):
+        self.__instr_list.append(f'mtp {x} {y}')
 
     def move_to_square(self, row, col):
         self.__instr_list.append(f'mts {row} {col}')
@@ -116,8 +116,14 @@ class MovementHandler(object):
     def move_pawn_from_square_to_square(self, from_col, from_row, to_col, to_row):
         self.__instr_list.append(f'mpfsts {from_col} {from_row} {to_col} {to_row}')
 
-    def move_pawn_from_square_to(self, from_col, from_row, to_col, to_row):
-        self.__instr_list.append(f'mpfst {from_col} {from_row} {to_col} {to_row}')
+    def move_pawn_from_square_to_pos(self, from_col, from_row, to_x, to_y):
+        self.__instr_list.append(f'mpfstp {from_col} {from_row} {to_x} {to_y}')
+
+    def move_pawn_from_pos_to_square(self, from_x, from_y, to_col, to_row):
+        self.__instr_list.append(f'mpfpts {from_x} {from_y} {to_col} {to_row}')
+
+    def move_pawn_from_pos_to_pos(self, from_x, from_y, to_x, to_y):
+        self.__instr_list.append(f'mpfptp {from_x} {from_y} {to_x} {to_y}')
 
     def calibrate(self):
         self.__instr_list.append(f'c')
@@ -127,8 +133,8 @@ class MovementHandler(object):
             if len(self.__instr_list):
                 try:
                     instr = self.__instr_list.pop(0).split()
-                    if instr[0] == 'mt':
-                        self.__move_to_inner(float(instr[1]), float(instr[2]))
+                    if instr[0] == 'mtp':
+                        self.__move_to_pos_inner(float(instr[1]), float(instr[2]))
 
                     elif instr[0] == 'mts':
                         self.__move_to_square_inner(int(instr[1]), int(instr[2]))
@@ -160,8 +166,14 @@ class MovementHandler(object):
                     elif instr[0] == 'mpfsts':
                         self.__move_pawn_from_square_to_square_inner(int(instr[1]), int(instr[2]), int(instr[3]), int(instr[4]))
                         
-                    elif instr[0] == 'mpfst':
-                        self.__move_pawn_from_square_to_square_inner(int(instr[1]), int(instr[2]), float(instr[3]), float(instr[4]))
+                    elif instr[0] == 'mpfstp':
+                        self.__move_pawn_from_square_to_pos_inner(int(instr[1]), int(instr[2]), float(instr[3]), float(instr[4]))
+                        
+                    elif instr[0] == 'mpfpts':
+                        self.__move_pawn_from_pos_to_square_inner(float(instr[1]), float(instr[2]), int(instr[3]), int(instr[4]))
+                        
+                    elif instr[0] == 'mpfptp':
+                        self.__move_pawn_from_pos_to_pos_inner(float(instr[1]), float(instr[2]), float(instr[3]), float(instr[4]))
 
                     elif instr[0] == 'c':
                         self.__calibrate_inner()
@@ -224,7 +236,7 @@ class MovementHandler(object):
         time.sleep(1./self.__speed)
         self.__pos[1] -= 1
 
-    def __move_to_inner(self, x, y):
+    def __move_to_pos_inner(self, x, y):
         step_x = int(x*config.steps_per_cm)
         step_y = int(y*config.steps_per_cm)
 
@@ -282,7 +294,7 @@ class MovementHandler(object):
         x = (1 - x_m)*config.board_pos['x'][0] + x_m*config.board_pos['x'][1]
         y = (1 - y_m)*config.board_pos['y'][0] + y_m*config.board_pos['y'][1]
 
-        self.__move_to_inner(x, y)
+        self.__move_to_pos_inner(x, y)
     
     def __set_magnet_inner(self, state):
         GPIO.output(config.pin_magnet, GPIO.HIGH if state else GPIO.LOW)
@@ -383,11 +395,27 @@ class MovementHandler(object):
         self.__put_pawn_inner()
         self.__set_servo_inner(12)
     
-    def __move_pawn_from_square_to_inner(self, from_col, from_row, to_x, to_y):
+    def __move_pawn_from_square_to_pos_inner(self, from_col, from_row, to_x, to_y):
         self.__set_servo_inner(12)
         self.__move_to_square_inner(from_col, from_row)
         self.__take_pawn_inner()
-        self.__move_to_inner(to_x, to_y)
+        self.__move_to_pos_inner(to_x, to_y)
+        self.__put_pawn_inner()
+        self.__set_servo_inner(12)
+    
+    def __move_pawn_from_pos_to_square_inner(self, from_x, from_y, to_col, to_row):
+        self.__set_servo_inner(12)
+        self.__move_to_pos_inner(from_x, from_y)
+        self.__take_pawn_inner()
+        self.__move_to_square_inner(to_col, to_row)
+        self.__put_pawn_inner()
+        self.__set_servo_inner(12)
+    
+    def __move_pawn_from_pos_to_pos_inner(self, from_x, from_y, to_x, to_y):
+        self.__set_servo_inner(12)
+        self.__move_to_pos_inner(from_x, from_y)
+        self.__take_pawn_inner()
+        self.__move_to_pos_inner(to_x, to_y)
         self.__put_pawn_inner()
         self.__set_servo_inner(12)
 

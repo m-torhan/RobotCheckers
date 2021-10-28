@@ -13,7 +13,7 @@ pin_servo         = 13
 
 steps_per_cm      = 50
 
-max_speed         = 1500
+max_speed         = 1600
 acceleration      = 10
 
 board_pos         = {'x': (0, 21), 'y': (12, 33)}
