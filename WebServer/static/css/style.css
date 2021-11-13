@@ -1,0 +1,60 @@
+body {
+    margin: 5%;
+    background-color: #202020;
+}
+
+header {
+    margin-bottom: 50px;
+}
+
+#container {
+    margin: 0 auto;
+    width: 640px;
+    height: 640px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+}
+
+#container div {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+.cell-color0 {
+    background-color: #009900;
+    color: #fff;
+}
+
+.cell-color1 {
+    background-color: #CCCCCC;
+    color: #000;
+}
+
+.nopawn {
+    background-color: inherit;
+}
+
+.player2-pawn-king {
+    background-color: #FF0000;
+}
+
+.player2-pawn-regular{
+    background-color: #000000;
+}
+
+.player1-pawn-king {
+    background-color: #0000FF;
+}
+
+.player1-pawn-regular {
+    background-color: #FFFFFF;
+}
+
+#circle {
+  width: 50px;
+  height: 50px;
+  -webkit-border-radius: 25px;
+  -moz-border-radius: 25px;
+  border-radius: 25px;
+}
