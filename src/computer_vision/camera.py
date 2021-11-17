@@ -29,4 +29,6 @@ class CameraHandler(object):
     
     def __cam_handler(self):
         while self.__run:
-            self.__frame = self.__cam.read()[1]
+            ret, frame = self.__cam.read()
+            if ret:
+                self.__frame = frame
