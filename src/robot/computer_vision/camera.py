@@ -46,7 +46,7 @@ class CameraHandler(object):
             while os.path.isfile(f'vids/debug_vid_{vid_idx}.avi'):
                 vid_idx += 1
 
-            self.__debug_out = cv2.VideoWriter(f'vids/debug_vid_{vid_idx}.avi', cv2.VideoWriter_fourcc(*'XVID'), fps, (640,480))
+            self.__debug_out = cv2.VideoWriter(f'vids/debug_vid_{vid_idx}.avi', cv2.VideoWriter_fourcc(*'XVID'), 2, (640, 480))
         
     def stop(self):
         self.__run = False
@@ -54,6 +54,10 @@ class CameraHandler(object):
 
         if self.__debug:
             self.__debug_out.release()
+        
+        self.__cam.release()
+
+        self.__warpPerspectiveMatrix = None
 
     def read_frame(self):
         return self.__frame.copy()
@@ -70,15 +74,20 @@ class CameraHandler(object):
             free_pawns[color] = []
             for x, y in objects_positions[color]:
                 pawn_on_board = False
-                if self.__x_min - self.__sq_side/2 < x < self.__x_max + self.__sq_side/2 and\
-                   self.__y_min - self.__sq_side/2 < y < self.__y_max + self.__sq_side/2:
-                   for i in range(min(0, int(x) - 1), max(8, int(x) + 2)):
-                       for j in range(min(0, int(y) - 1), max(8, int(y) + 2)):
-                           if (x - i)**2 + (y - j)**2 < 1/4:
-                               pawn_on_board = True
-                               board_code[i, j] = code
-                               board_pos[i, j, 0] = x
-                               board_pos[i, j, 1] = y
+                if -.5 < x < 7.5 and\
+                    -.5 < y < 7.5:
+                    for i in range(max(0, int(x) - 1), min(8, int(x) + 2)):
+                        for j in range(max(0, int(y) - 1), min(8, int(y) + 2)):
+                            if (i + j) % 2 == 1:
+                                # check only + pattern
+                                if i != int(x) and j != int(y):
+                                    continue
+                                # calculate distance from square center
+                                if (x - (i + .5))**2 + (y - (j + .5))**2 < 1/2:
+                                    pawn_on_board = True
+                                    board_code[i, j] = code
+                                    board_pos[i, j, 0] = x
+                                    board_pos[i, j, 1] = y
                                
                 if not pawn_on_board:
                     free_pawns[color].append((x, y))
@@ -89,7 +98,7 @@ class CameraHandler(object):
         if self.__warpPerspectiveMatrix is None or self.__frame is None:
             return None
         
-        frame = self.__frame.copy()
+        frame = cv2.cvtColor(self.__frame.copy(), cv2.COLOR_BGR2RGB)
 
         frame_perp_crop = cv2.warpPerspective(frame, self.__warpPerspectiveMatrix, (self.__out_width, self.__out_height), flags=cv2.INTER_LINEAR)
 
