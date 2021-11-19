@@ -64,18 +64,26 @@ class CameraHandler(object):
         board_code = np.zeros((8, 8), dtype=np.uint8)
         board_pos = np.zeros((8, 8, 2), dtype=np.float64)
 
+        free_pawns = {}
+
         for color, code in config.pawns_colors_code.items():
+            free_pawns[color] = []
             for x, y in objects_positions[color]:
+                pawn_on_board = False
                 if self.__x_min - self.__sq_side/2 < x < self.__x_max + self.__sq_side/2 and\
                    self.__y_min - self.__sq_side/2 < y < self.__y_max + self.__sq_side/2:
                    for i in range(min(0, int(x) - 1), max(8, int(x) + 2)):
                        for j in range(min(0, int(y) - 1), max(8, int(y) + 2)):
                            if (x - i)**2 + (y - j)**2 < 1/4:
+                               pawn_on_board = True
                                board_code[i, j] = code
                                board_pos[i, j, 0] = x
                                board_pos[i, j, 1] = y
+                               
+                if not pawn_on_board:
+                    free_pawns[color].append((x, y))
 
-        return board_code, board_pos, len(objects_positions['hand']) > 0
+        return board_code, board_pos, free_pawns, len(objects_positions['hand']) > 0
 
     def detect_objects_positions(self):
         if self.__warpPerspectiveMatrix is None or self.__frame is None:
