@@ -63,7 +63,7 @@ class CameraHandler(object):
         return self.__frame.copy()
     
     def read_board(self):
-        objects_positions = self.detect_objects_positions()
+        objects_positions = self.__detect_objects_positions()
 
         board_code = np.zeros((8, 8), dtype=np.uint8)
         board_pos = np.zeros((8, 8, 2), dtype=np.float64)
@@ -94,7 +94,7 @@ class CameraHandler(object):
 
         return board_code, board_pos, free_pawns, len(objects_positions['hand']) > 0
 
-    def detect_objects_positions(self):
+    def __detect_objects_positions(self):
         if self.__warpPerspectiveMatrix is None or self.__frame is None:
             return None
         
