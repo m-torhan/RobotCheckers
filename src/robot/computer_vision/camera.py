@@ -75,7 +75,7 @@ class CameraHandler(object):
                                board_pos[i, j, 0] = x
                                board_pos[i, j, 1] = y
 
-        return board_code, board_pos
+        return board_code, board_pos, len(objects_positions['hand']) > 0
 
     def detect_objects_positions(self):
         if self.__warpPerspectiveMatrix is None or self.__frame is None:
@@ -83,7 +83,7 @@ class CameraHandler(object):
         
         frame = self.__frame.copy()
 
-        frame_perp_crop = cv2.warpPerspective(frame, self.__warpPerspectiveMatrix, (out_width, out_height), flags=cv2.INTER_LINEAR)
+        frame_perp_crop = cv2.warpPerspective(frame, self.__warpPerspectiveMatrix, (self.__out_width, self.__out_height), flags=cv2.INTER_LINEAR)
 
         frame_perp_crop_hsv = cv2.cvtColor(frame_perp_crop, cv2.COLOR_RGB2HSV)
 
