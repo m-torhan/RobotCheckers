@@ -11,6 +11,14 @@ class BoardStatus(object):
 
     def __init__(self, board_size):
         self._fields = np.full((board_size, board_size), FieldStatus.EMPTY_FIELD, dtype=FieldStatus)
+    
+    @property
+    def shape(self):
+        return self._fields.shape
+
+    @property
+    def fields(self):
+        return self._fields
 
     def indexes_in_range(self,x:int,y:int) ->bool:
         max_y, max_x = self._fields.shape

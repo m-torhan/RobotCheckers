@@ -66,14 +66,14 @@ class BoardPartialView(View):
 
     def draw_available_moves(self, origin_pos, neighbours):
         for move in neighbours:
-            position = move.get_position()
+            position = move._dest
             x, y = position
             self.draw_dot(x, y)
             moves = move.next_move
             while len(moves) > 0:
                 next_depth = False
                 for inner_move in moves:
-                    destination_pos = inner_move.get_position()
+                    destination_pos = inner_move._dest
                     inner_x, inner_y = destination_pos
                     if point_same_line(origin_pos, destination_pos, position):
                         self.draw_dot(inner_x, inner_y)

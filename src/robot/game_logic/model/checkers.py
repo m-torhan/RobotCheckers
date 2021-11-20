@@ -21,6 +21,10 @@ class Checkers(object):
         self._board_status = BoardStatus(self._board_size)
 
     @property
+    def board_status(self):
+        return self._board_status
+
+    @property
     def end(self):
         return self._end
 
@@ -28,19 +32,23 @@ class Checkers(object):
         pawns = (FieldStatus.PLAYER_1_REGULAR_PAWN, FieldStatus.PLAYER_1_KING) if PlayerEnum.PLAYER_1 == self.player_turn else\
                 (FieldStatus.PLAYER_2_REGULAR_PAWN, FieldStatus.PLAYER_2_KING)
         
-        if np.sum(self._board_status == pawns[0]) + np.sum(self._board_status == pawns[1]) == 0:
+        if np.sum(self._board_status.fields == pawns[0]) + np.sum(self._board_status.fields == pawns[1]) == 0:
+            print('is_end TRUE no pawns')
             return True
 
-        for i in self._board_status.shape[0]:
-            for j in self._board_status.shape[1]:
-                if self._board_status.get_field(i, j) == FieldStatus.PLAYER_1_REGULAR_PAWN:
-                    if len(self.calc_available_regular_movements((i, j))) == 0:
-                        return True
+        any_move_possible = False
+        for i in range(self._board_status.shape[0]):
+            for j in range(self._board_status.shape[1]):
+                if self._board_status.get_field(i, j) in pawns:
+                    self.calc_available_movements((i, j))
+                    if len(self.neighbours) > 0:
+                        any_move_possible = True
 
-                if self._board_status.get_field(i, j) == FieldStatus.PLAYER_1_KING:
-                    if len(self.calc_available_king_movements((i, j))) == 0:
-                        return True
+        if not any_move_possible:
+            print('is_end TRUE no move')
+            return True
         
+        print('is_end FALSE')
         return False
 
     def get_board_status(self):
@@ -76,7 +84,7 @@ class Checkers(object):
             moves = self.neighbours
 
         for move in moves:
-            position = move.get_position()
+            position = move._dest
             if position == dest_pos:
                 return True
             if len(move.next_move) and point_same_line(origin_pos, dest_pos, position):
@@ -102,7 +110,7 @@ class Checkers(object):
 
         while not move_ended:
             for move in self.neighbours:
-                position = move.get_position()
+                position = move._dest
                 move_ended = position == (x_dest, y_dest)
                 if move_ended or point_same_line(origin_pos, destination_pos,
                                                  position):
@@ -125,6 +133,20 @@ class Checkers(object):
     def next_player(self):
         self.player_turn = self.opponent_player()
 
+    def calc_available_movements_for_player(self, player):
+        pawns = (FieldStatus.PLAYER_1_REGULAR_PAWN, FieldStatus.PLAYER_1_KING) if PlayerEnum.PLAYER_1 == player else\
+                (FieldStatus.PLAYER_2_REGULAR_PAWN, FieldStatus.PLAYER_2_KING)
+
+        moves = []
+        
+        for i in range(self._board_status.shape[0]):
+            for j in range(self._board_status.shape[1]):
+                if self._board_status.get_field(i, j) in pawns:
+                    self.calc_available_movements((i, j))
+                    moves.extend(self.neighbours)
+        
+        return moves
+
     def calc_available_movements(self, selected_pawn):
         x, y = selected_pawn
         self.neighbours = []
@@ -136,7 +158,7 @@ class Checkers(object):
 
     def calc_available_regular_movements(self, selected_pawn, current_move=None):
         if current_move is not None:
-            selected_pawn = current_move.get_position()
+            selected_pawn = current_move._dest
 
         player = self.player_turn
 
@@ -153,7 +175,7 @@ class Checkers(object):
                        self.is_field_opponent(middle_point.x, middle_point.y) and \
                        self.is_field_empty(new_x, new_y):
 
-                        move = Move((new_x, new_y), [(middle_point.x, middle_point.y)])
+                        move = Move((x, y), (new_x, new_y), [(middle_point.x, middle_point.y)])
                         self.calc_available_regular_movements((new_x, new_y),
                                                               move)
                         if current_move is None:
@@ -165,7 +187,7 @@ class Checkers(object):
                 for new_x, new_y in [(x + 1, y + y_direction), (x - 1, y + y_direction)]:
                     if self.coordinate_inside(new_x) and \
                             self.is_field_empty(new_x, new_y):
-                        self.neighbours.append(Move((new_x, new_y)))
+                        self.neighbours.append(Move((x, y), (new_x, new_y)))
 
     def calc_available_king_movements(self, selected_pawn,
                                       current_move=None):
@@ -194,7 +216,7 @@ class Checkers(object):
                     if self.is_field_empty(new_x, new_y):
                         next_must_be_empty = False
                         continue_move = len(pawns_for_taking) > 0
-                        move = Move((new_x, new_y), pawns_for_taking.copy())
+                        move = Move((x, y), (new_x, new_y), pawns_for_taking.copy())
                         if continue_move:
                             self.calc_available_king_movements((new_x, new_y), move)
                         if current_move is None:

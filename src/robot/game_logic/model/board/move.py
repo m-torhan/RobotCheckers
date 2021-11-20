@@ -1,16 +1,22 @@
 from typing import Tuple, List
 
 class Move(object):
-    def __init__(self, position, pawns_for_taking: List[Tuple[int, int]] = None):
-        self._position = position
+    def __init__(self, src, dest, pawns_for_taking: List[Tuple[int, int]] = None):
+        self._src = src
+        self._dest = dest
         self._next_move = []
         if pawns_for_taking is None:
             self._pawns_for_taking = []
         else:
             self._pawns_for_taking = pawns_for_taking
 
-    def get_position(self):
-        return self._position
+    @property
+    def src(self):
+        return self._src
+
+    @property
+    def dest(self):
+        return self._dest
 
     @property
     def next_move(self):
@@ -29,7 +35,7 @@ class Move(object):
     def __eq__(self, other):
         if not isinstance(other, Move):
             return False
-        return self._position == other.get_position() \
+        return self._position == other._dest \
                and self.pawns_for_taking == other.pawns_for_taking \
                and self.next_move == other.next_move
 
