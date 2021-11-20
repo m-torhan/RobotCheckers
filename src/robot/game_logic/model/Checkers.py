@@ -2,16 +2,14 @@ from typing import Tuple
 
 import numpy as np
 
-from src.model.board.BoardStatus import BoardStatus
-from src.model.board.Move import Move
-from src.common.enums import FieldStatus
-from src.common.constants.consts import *
-from src.common.enums.PlayerEnum import PlayerEnum
-from src.common.utils.utils import point_inside_circle, point_between, map_field_to_player, \
-    point_same_line
+from src.robot.game_logic.model.board.board_status import BoardStatus
+from src.robot.game_logic.model.board.move import Move
+from src.robot.game_logic.common.enums import FieldStatus
+from src.robot.game_logic.common.constants.consts import *
+from src.robot.game_logic.common.enums.player_enum import PlayerEnum
+from src.robot.game_logic.common.utils.utils import *
 
-
-class Checkers:
+class Checkers(object):
     def __init__(self, board_size=BOARD_SIZE):
         self._end = False
         self.neighbours = []
@@ -38,15 +36,15 @@ class Checkers:
     def clicked_pawn(self, pos) -> Tuple[int, int] or None:
         mouse_x, mouse_y = pos
         x, y = self.clicked_field(pos)
-        middle_point_x = WINDOW_BORDER + BOARD_FIELD_WIDTH * x + BOARD_FIELD_WIDTH / 2
-        middle_point_y = WINDOW_BORDER + BOARD_FIELD_HEIGHT * y + BOARD_FIELD_HEIGHT / 2
+        middle_point_x = WINDOW_BORDER + BOARD_FIELD_WIDTH*x + BOARD_FIELD_WIDTH/2
+        middle_point_y = WINDOW_BORDER + BOARD_FIELD_HEIGHT*y + BOARD_FIELD_HEIGHT/2
         radius = 35
 
         field_status = self._board_status.get_field(x, y)
         player = map_field_to_player(field_status)
 
         if player == self.player_turn and \
-                point_inside_circle(mouse_x, mouse_y, middle_point_x, middle_point_y, radius):
+           point_inside_circle(mouse_x, mouse_y, middle_point_x, middle_point_y, radius):
             return x, y
         return None
 
@@ -66,6 +64,7 @@ class Checkers:
                 return True
             if len(move.next_move) and point_same_line(origin_pos, dest_pos, position):
                 return self.is_movement_valid(origin_pos, dest_pos, move.next_move)
+
         return False
 
     def take_action(self, origin_pos, destination_pos):
@@ -130,12 +129,12 @@ class Checkers:
         if self._board_status.get_field(x, y) in [FieldStatus.PLAYER_1_REGULAR_PAWN,
                                                   FieldStatus.PLAYER_2_REGULAR_PAWN] or \
                 (current_move is not None and self._board_status.get_field(x, y) == FieldStatus.EMPTY_FIELD):
-            if self.coordinate_inside(y + 2 * y_direction):
-                for new_x, new_y in [(x + 2, y + 2 * y_direction), (x - 2, y + 2 * y_direction)]:
+            if self.coordinate_inside(y + 2*y_direction):
+                for new_x, new_y in [(x + 2, y + 2*y_direction), (x - 2, y + 2*y_direction)]:
                     middle_point = point_between(x, y, new_x, new_y)
                     if self.coordinate_inside(new_x) and \
-                            self.is_field_opponent(middle_point.x, middle_point.y) and \
-                            self.is_field_empty(new_x, new_y):
+                       self.is_field_opponent(middle_point.x, middle_point.y) and \
+                       self.is_field_empty(new_x, new_y):
 
                         move = Move((new_x, new_y), [(middle_point.x, middle_point.y)])
                         self.calc_available_regular_movements((new_x, new_y),

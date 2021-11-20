@@ -1,5 +1,4 @@
-from src.view.View import View
-
+from src.robot.game_logic.view import View
 
 class MenuPartialView(View):
     def init(self):

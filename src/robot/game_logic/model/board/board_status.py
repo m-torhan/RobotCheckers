@@ -1,10 +1,9 @@
 import numpy as np
 from numpy import ndarray
 
-from src.common.enums.FieldStatus import FieldStatus
+from src.robot.game_logic.common.enums.field_status import FieldStatus
 
-
-class BoardStatus:
+class BoardStatus(object):
     _fields: ndarray
 
     def __init__(self, board_size):

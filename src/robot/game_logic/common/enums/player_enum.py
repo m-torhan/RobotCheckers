@@ -1,7 +1,6 @@
 from enum import auto
 
-from src.common.enums.ExtendedEnum import ExtendedEnum
-
+from src.robot.game_logic.common.enums.extended_enum import ExtendedEnum
 
 class PlayerEnum(ExtendedEnum):
     PLAYER_1 = 1

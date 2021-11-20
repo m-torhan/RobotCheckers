@@ -1,7 +1,6 @@
 from typing import Tuple, List
 
-
-class Move:
+class Move(object):
     def __init__(self, position, pawns_for_taking: List[Tuple[int, int]] = None):
         self._position = position
         self._next_move = []

@@ -1,9 +1,8 @@
 import pygame
 
-from src.common.constants.consts import *
-from src.common.utils.utils import *
-from src.view.View import View
-
+from src.robot.game_logic.common.constants.consts import *
+from src.robot.game_logic.common.utils.utils import *
+from src.robot.game_logic.view import View
 
 class BoardPartialView(View):
     def __init__(self):

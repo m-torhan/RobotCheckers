@@ -2,15 +2,16 @@
 # TODO loop taking (return on the same field as started should be available from both sites) e.g (diamond)
 # TODO when game ends
 # TODO prepare gui the same as in figma
+__package__
 
 import sys
 import pygame
+import os
+import inspect
 
-from src.model.Checkers import Checkers
-from src.model.player.Player1 import Player1
-from src.model.player.Player2 import Player2
-from src.view.BoardPartialView import BoardPartialView
-
+from src.robot.game_logic.model.checkers import Checkers
+from src.robot.game_logic.model.player.players import Player1, Player2
+from src.robot.game_logic.view.board_partial_view import BoardPartialView
 
 def main():
     board_view = BoardPartialView()
