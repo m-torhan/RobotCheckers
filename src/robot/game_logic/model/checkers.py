@@ -25,8 +25,23 @@ class Checkers(object):
         return self._end
 
     def is_end(self):
-        pass
-        # TODO no available move or opponent lost all pawns
+        pawns = (FieldStatus.PLAYER_1_REGULAR_PAWN, FieldStatus.PLAYER_1_KING) if PlayerEnum.PLAYER_1 == self.player_turn else\
+                (FieldStatus.PLAYER_2_REGULAR_PAWN, FieldStatus.PLAYER_2_KING)
+        
+        if np.sum(self._board_status == pawns[0]) + np.sum(self._board_status == pawns[1]) == 0:
+            return True
+
+        for i in self._board_status.shape[0]:
+            for j in self._board_status.shape[1]:
+                if self._board_status.get_field(i, j) == FieldStatus.PLAYER_1_REGULAR_PAWN:
+                    if len(self.calc_available_regular_movements((i, j))) == 0:
+                        return True
+
+                if self._board_status.get_field(i, j) == FieldStatus.PLAYER_1_KING:
+                    if len(self.calc_available_king_movements((i, j))) == 0:
+                        return True
+        
+        return False
 
     def get_board_status(self):
         return self._board_status
