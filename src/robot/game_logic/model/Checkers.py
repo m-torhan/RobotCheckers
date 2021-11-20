@@ -1,10 +1,12 @@
+import sys
 from typing import Tuple
-
 import numpy as np
+
+sys.path.append('../../../../')
 
 from src.robot.game_logic.model.board.board_status import BoardStatus
 from src.robot.game_logic.model.board.move import Move
-from src.robot.game_logic.common.enums import FieldStatus
+from src.robot.game_logic.common.enums.field_status import FieldStatus
 from src.robot.game_logic.common.constants.consts import *
 from src.robot.game_logic.common.enums.player_enum import PlayerEnum
 from src.robot.game_logic.common.utils.utils import *

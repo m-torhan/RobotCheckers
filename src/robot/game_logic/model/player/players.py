@@ -1,3 +1,7 @@
+import sys
+
+sys.path.append('../../../../../')
+
 from src.robot.game_logic.common.enums.field_status import FieldStatus
 from src.robot.game_logic.common.constants.consts import BOARD_SIZE
 

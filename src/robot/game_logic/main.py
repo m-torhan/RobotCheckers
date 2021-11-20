@@ -2,12 +2,13 @@
 # TODO loop taking (return on the same field as started should be available from both sites) e.g (diamond)
 # TODO when game ends
 # TODO prepare gui the same as in figma
-__package__
 
 import sys
 import pygame
 import os
 import inspect
+
+sys.path.append('../../../')
 
 from src.robot.game_logic.model.checkers import Checkers
 from src.robot.game_logic.model.player.players import Player1, Player2

@@ -1,5 +1,8 @@
 import numpy as np
 from numpy import ndarray
+import sys
+
+sys.path.append('../../../../../')
 
 from src.robot.game_logic.common.enums.field_status import FieldStatus
 

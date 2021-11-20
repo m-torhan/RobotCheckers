@@ -1,8 +1,11 @@
 import pygame
+import sys
+
+sys.path.append('../../../../')
 
 from src.robot.game_logic.common.constants.consts import *
 from src.robot.game_logic.common.utils.utils import *
-from src.robot.game_logic.view import View
+from src.robot.game_logic.view.view import View
 
 class BoardPartialView(View):
     def __init__(self):

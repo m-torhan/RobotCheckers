@@ -1,3 +1,7 @@
+import sys
+
+sys.path.append('../../../../../')
+
 from src.robot.game_logic.common.enums.field_status import FieldStatus
 from src.robot.game_logic.common.enums.player_enum import PlayerEnum
 
@@ -13,25 +17,6 @@ class Point(object):
     @property
     def y(self):
         return self._y
-
-class Pawn(object):
-    def __init__(self):
-        pass
-
-
-class Field(object):
-    def __init__(self):
-        pass
-
-
-class Move(object):
-    def __init__(self):
-        pass
-
-
-class Player(object):
-    def __init__(self):
-        pass
 
 def point_between(origin_x, origin_y, dest_x, dest_y):
     return Point((origin_x + dest_x) // 2, (origin_y + dest_y) // 2)

@@ -1,3 +1,7 @@
+import sys
+
+sys.path.append('../../../../../')
+
 from src.robot.game_logic.common.enums.field_status import FieldStatus
 
 WIDTH, HEIGHT = 800, 800
