@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" href="/static/css/style.css">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Checkers</title>
+</head>
+
+<body>
+    <a href="game" style="color: #FFFFFF">game</a>
+    <button onclick="sendSettings()">send settings</button>
+    <script>
+        function sendSettings() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/settings", true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({
+                'difficulty': 1,
+                'start_mode': 'player'
+            }));
+        }
+    </script>
+    <p style="color: #FFFFFF">Checkers main page</p>
+</body>
+
+</html>
