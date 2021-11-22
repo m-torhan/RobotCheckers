@@ -18,8 +18,8 @@ rec_vid = False
 if '-v' in sys.argv:
     rec_vid = True
 
-window_width = 768
-window_height = 512
+window_width = 512
+window_height = 256
 
 board = np.array([[0,0,0,1,0,0,0,0],
                   [0,0,0,0,3,0,0,0],
@@ -55,9 +55,10 @@ def game():
         r = random.getrandbits(1)
         player_1_num = int(r == 0)
         player_2_num = int(r != 0)
-        player_1 = ai_player.AIPlayerRandom(player_1_num)
-        #player_2 = ai_player.AIPlayerRandom(player_2_num)
-        player_2 = ai_player.AIPlayerMonteCarlo(player_2_num, 30)
+        #player_1 = ai_player.AIPlayerRandom(player_1_num)
+        player_1 = ai_player.AIPlayerMinimax(player_1_num, 3)
+        player_2 = ai_player.AIPlayerRandom(player_2_num)
+        #player_2 = ai_player.AIPlayerMonteCarlo(player_2_num, 30)
         #player_2 = ai_player.AIPlayerMinimax(player_2_num, 5)
 
         while not checkers.end and run:

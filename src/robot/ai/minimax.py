@@ -18,7 +18,7 @@ def get_best_move(checkers, depth):
     for layer in nodes[::-1]:
         for node in layer:
             node.calculate_backtrack_score()
-    
+
     best_move = None
     best_score = 0
     for node in root.next_nodes:
@@ -64,9 +64,14 @@ class MoveTreeNode(object):
                 # 1 point for pawn, 5 points for queen
                 score += ((checkers.board[taken] - 1) % 2)*4 + 1 
 
-            score *= (-1, 1)[checkers.player_turn == self.__player_num]
+            multiplier = (-1, 1)[checkers.player_turn == self.__player_num]
 
-            ret = checkers.make_move(move)
+            ret, promoted = checkers.make_move(move)
+
+            if promoted:
+                score += 4
+            
+            score *= multiplier
             
             if ret:
                 self.__next_nodes.append(MoveTreeNode(checkers, self.__player_num, move, score, self.__node_depth + 1))
@@ -75,21 +80,22 @@ class MoveTreeNode(object):
                 print(checkers.board)
                 print(move.chain, move.taken_figures)
 
-    
     def calculate_backtrack_score(self):
         if len(self.__next_nodes) == 0:
             if self.__node_checkers.end:
-                return 1000*(-1, 1)[self.__node_checkers.winner == self.__player_num]
+                self.__backtrack_score = 1000*(-1, 1)[self.__node_checkers.winner == self.__player_num]
+                return
 
-            return self.__node_score
+            self.__backtrack_score = self.__node_score
+            return
         
         scores = []
         for node in self.__next_nodes:
             scores.append(node.backtrack_score)
 
         if self.__node_checkers.player_turn == self.__player_num:
-            return max(scores)
+            self.__backtrack_score = max(scores) + self.__node_score
         else:
-            return min(scores)
+            self.__backtrack_score = min(scores) + self.__node_score
         
 
