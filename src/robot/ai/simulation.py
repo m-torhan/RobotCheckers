@@ -9,81 +9,71 @@ from time import perf_counter, sleep
 import threading
 import cv2
 import numpy as np
+import random
 
 import ai_player
-from src.robot.game_logic.model.checkers import Checkers
-from src.robot.game_logic.common.enums.player_enum import PlayerEnum
-from src.robot.game_logic.model.player.players import Player1, Player2
-from src.robot.game_logic.common.enums.field_status import FieldStatus
+from src.robot.game_logic.checkers import Checkers
+
+rec_vid = False
+if '-v' in sys.argv:
+    rec_vid = True
 
 window_width = 768
 window_height = 512
 
-player_1 = ai_player.AIPlayer('random')
-player_2 = ai_player.AIPlayer('random')
+board = np.array([[0,0,0,1,0,0,0,0],
+                  [0,0,0,0,3,0,0,0],
+                  [0,0,0,0,0,0,0,0],
+                  [0,0,0,0,3,0,0,0],
+                  [0,0,0,0,0,0,0,0],
+                  [0,0,0,0,3,0,0,0],
+                  [0,0,0,0,0,0,0,0],
+                  [0,0,0,0,0,0,0,0]], dtype=np.uint8).transpose(1, 0)
 
-players = [Player1(), Player2()]
 checkers = Checkers()
-for player in players:
-    checkers.init_fields(player.get_starting_positions(), player.get_regular_pawn())
 
-vid_idx = 0
+if rec_vid:
+    vid_idx = 0
 
-while os.path.isfile(f'vids/vid_{vid_idx}.avi'):
-    vid_idx += 1
+    while os.path.isfile(f'vids/vid_{vid_idx}.avi'):
+        vid_idx += 1
 
-out = cv2.VideoWriter(f'vids/vid_{vid_idx}.avi', cv2.VideoWriter_fourcc(*'XVID'), 30, (window_width, window_height))
+    out = cv2.VideoWriter(f'vids/vid_{vid_idx}.avi', cv2.VideoWriter_fourcc(*'XVID'), 30, (window_width, window_height))
 
 available_moves = None
+score = [0, 0]
 
 def game():
     global checkers
-    global player_1
-    global player_2
     global available_moves
     global run
+    global score
 
-    selected_pawn = None
+    while run:
 
-    while not checkers.is_end() and run:
-        print(f'is_end: {checkers.is_end()}')
-        print(f'Player {checkers.player_turn} move')
-        if checkers.player_turn == PlayerEnum.PLAYER_1:
-            if selected_pawn is not None:
-                checkers.calc_available_movements(selected_pawn)
-                available_moves = checkers.neighbours
-            else:
-                available_moves = checkers.calc_available_movements_for_player(checkers.player_turn)
+        checkers = Checkers()
+        r = random.getrandbits(1)
+        player_1_num = int(r == 0)
+        player_2_num = int(r != 0)
+        player_1 = ai_player.AIPlayerRandom(player_1_num)
+        player_2 = ai_player.AIPlayerMinimax(player_2_num, 3)
 
-            print(len(available_moves))
-            sleep(.25)
-            move = player_1.get_next_move(checkers.board_status, available_moves)
+        while not checkers.end and run:
+            available_moves = checkers.calc_available_moves_for_player(checkers.player_turn)
 
-        elif checkers.player_turn == PlayerEnum.PLAYER_2:
-            if selected_pawn is not None:
-                checkers.calc_available_movements(selected_pawn)
-                available_moves = checkers.neighbours
-            else:
-                available_moves = checkers.calc_available_movements_for_player(checkers.player_turn)
+            if checkers.player_turn == player_1.num:
+                move, ret = player_1.make_move(checkers)
 
-            print(len(available_moves))
-            sleep(.25)
-            move = player_2.get_next_move(checkers.board_status, available_moves)
-        
-        print(f'move: {move.src} -> {move.dest}')
-        checkers.calc_available_movements(move.src)
-        checkers.take_action(move.src, move.dest)
+            elif checkers.player_turn == player_2.num:
+                move, ret = player_2.make_move(checkers)
 
-        print(len(checkers.neighbours))
-        if len(checkers.neighbours) == 0:
-            checkers.next_player()
-            selected_pawn = None
-        
+        if checkers.winner == player_1_num:
+            score[0] += 1
         else:
-            selected_pawn = move.dest
-        
+            score[1] += 1
 
 game_thread = threading.Thread(target=game)
+thread_started = False
 
 pygame.init()
 window = pygame.display.set_mode((window_width, window_height), 0, 32)
@@ -104,6 +94,7 @@ def draw_text(text, size, color, surface, position, anchor=''):
         textrect.topright = position
     else:
         textrect.center = position
+
     surface.blit(textobj, textrect)
 
 def terminate():
@@ -121,8 +112,10 @@ while run:
             terminate()
         
         if event.type == KEYDOWN:
-            if event.key == K_s:
+            if event.key == K_s and not thread_started:
                 game_thread.start()
+                thread_started = True
+
             if event.key == K_e:
                 run = False
             
@@ -130,34 +123,40 @@ while run:
     
     window.fill((0, 0, 0))
     
-    for i in range(checkers.board_status.shape[0]):
-        for j in range(checkers.board_status.shape[1]):
-            pygame.draw.rect(window, ((192,)*3, (0, 255, 0))[(i + j) % 2], (32*i, 32*j, 32, 32), 0)
-            status = checkers.board_status.get_field(i, j)
+    for i in range(checkers.board.shape[0]):
+        for j in range(checkers.board.shape[1]):
+            pygame.draw.rect(window, ((192,)*3, (0, 192, 0))[(i + j) % 2], (32*i, 32*j, 32, 32), 0)
+            square = checkers.board[i,j]
             col = None
-            if status == FieldStatus.PLAYER_1_REGULAR_PAWN:
+            if square == 1:
                 col = (255,)*3
-            elif status == FieldStatus.PLAYER_2_REGULAR_PAWN:
+            elif square == 3:
                 col = (0,)*3
-            elif status == FieldStatus.PLAYER_1_KING:
+            elif square == 2:
                 col = (0, 0, 255)
-            elif status == FieldStatus.PLAYER_2_KING:
+            elif square == 4:
                 col = (255, 0, 0)
             if col is not None:
                 pygame.draw.circle(window, col, (32*i + 16, 32*j + 16), 10, 0)
 
     if available_moves is not None:
         for move in available_moves:
-            pygame.draw.line(window, (0, 128, 128), np.array(move.src)*32 + 16, np.array(move.dest)*32 + 16, 8)
+            for i in range(len(move.chain) - 1):
+                pygame.draw.line(window, (0, 128, 128), np.array(move.chain[i])*32 + 16, np.array(move.chain[i + 1])*32 + 16, 8)
+
+    draw_text(f'{score}', 32, (255,)*3, window, (384, 128))
 
     pygame.display.update()
 
-    screen = pygame.display.get_surface()
-    capture = pygame.surfarray.pixels3d(screen)
-    capture = capture.transpose([1, 0, 2])
-    capture_bgr = cv2.cvtColor(capture, cv2.COLOR_RGB2BGR)
-    out.write(capture_bgr)
+    if rec_vid:
+        screen = pygame.display.get_surface()
+        capture = pygame.surfarray.pixels3d(screen)
+        capture = capture.transpose([1, 0, 2])
+        capture_bgr = cv2.cvtColor(capture, cv2.COLOR_RGB2BGR)
+        out.write(capture_bgr)
+        del capture
     
     clock.tick(30)
 
-out.release()
+if rec_vid:
+    out.release()
