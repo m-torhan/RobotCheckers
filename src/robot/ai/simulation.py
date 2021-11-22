@@ -56,7 +56,9 @@ def game():
         player_1_num = int(r == 0)
         player_2_num = int(r != 0)
         player_1 = ai_player.AIPlayerRandom(player_1_num)
-        player_2 = ai_player.AIPlayerMinimax(player_2_num, 3)
+        #player_2 = ai_player.AIPlayerRandom(player_2_num)
+        player_2 = ai_player.AIPlayerMonteCarlo(player_2_num, 30)
+        #player_2 = ai_player.AIPlayerMinimax(player_2_num, 5)
 
         while not checkers.end and run:
             available_moves = checkers.calc_available_moves_for_player(checkers.player_turn)
@@ -66,7 +68,7 @@ def game():
 
             elif checkers.player_turn == player_2.num:
                 move, ret = player_2.make_move(checkers)
-
+            
         if checkers.winner == player_1_num:
             score[0] += 1
         else:
