@@ -83,7 +83,8 @@ class MoveTreeNode(object):
     def calculate_backtrack_score(self):
         if len(self.__next_nodes) == 0:
             if self.__node_checkers.end:
-                self.__backtrack_score = 1000*(-1, 1)[self.__node_checkers.winner == self.__player_num]
+                if self.__node_checkers.winner != 0:
+                    self.__backtrack_score = 1000*(-1, 1)[self.__node_checkers.winner == self.__player_num]
                 return
 
             self.__backtrack_score = self.__node_score

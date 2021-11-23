@@ -41,13 +41,17 @@ if rec_vid:
     out = cv2.VideoWriter(f'vids/vid_{vid_idx}.avi', cv2.VideoWriter_fourcc(*'XVID'), 30, (window_width, window_height))
 
 available_moves = None
-score = [0, 0]
+player_1 = None
+player_2 = None
+score = [0, 0, 0]
 
 def game():
     global checkers
     global available_moves
     global run
     global score
+    global player_1
+    global player_2
 
     while run:
 
@@ -56,10 +60,10 @@ def game():
         player_1_num = int(r == 0)
         player_2_num = int(r != 0)
         #player_1 = ai_player.AIPlayerRandom(player_1_num)
-        player_1 = ai_player.AIPlayerMinimax(player_1_num, 3)
-        player_2 = ai_player.AIPlayerRandom(player_2_num)
-        #player_2 = ai_player.AIPlayerMonteCarlo(player_2_num, 30)
-        #player_2 = ai_player.AIPlayerMinimax(player_2_num, 5)
+        player_1 = ai_player.AIPlayerMinimax(player_1_num, 2)
+        #player_2 = ai_player.AIPlayerRandom(player_2_num)
+        player_2 = ai_player.AIPlayerMonteCarlo(player_2_num, 30)
+        #player_2 = ai_player.AIPlayerMinimax(player_2_num, 2)
 
         while not checkers.end and run:
             available_moves = checkers.calc_available_moves_for_player(checkers.player_turn)
@@ -70,10 +74,13 @@ def game():
             elif checkers.player_turn == player_2.num:
                 move, ret = player_2.make_move(checkers)
             
-        if checkers.winner == player_1_num:
-            score[0] += 1
-        else:
-            score[1] += 1
+        if checkers.end:
+            if checkers.winner == player_1_num:
+                score[0] += 1
+            elif checkers.winner == player_2_num:
+                score[2] += 1
+            else:
+                score[1] += 1
 
 game_thread = threading.Thread(target=game)
 thread_started = False
@@ -147,6 +154,7 @@ while run:
             for i in range(len(move.chain) - 1):
                 pygame.draw.line(window, (0, 128, 128), np.array(move.chain[i])*32 + 16, np.array(move.chain[i + 1])*32 + 16, 8)
 
+    draw_text(f'{type(player_1).__name__} {type(player_2).__name__}', 16, (255,)*3, window, (384, 96))
     draw_text(f'{score}', 32, (255,)*3, window, (384, 128))
 
     pygame.display.update()

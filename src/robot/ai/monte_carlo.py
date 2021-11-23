@@ -9,7 +9,7 @@ def get_best_move(checkers, simulations):
     player_num = checkers.player_turn
 
     available_moves = checkers.calc_available_moves_for_player(checkers.player_turn)
-    win_probability = []
+    move_score = []
 
     for move in available_moves:
         new_checkers = checkers.copy()
@@ -28,8 +28,10 @@ def get_best_move(checkers, simulations):
                     move, _ = player_2.make_move(new_checkers)
                 
             if new_checkers.winner == player_num:
+                s += 5
+            elif new_checkers.winner == -1:
                 s += 1
         
-        win_probability.append(s/simulations)
+        move_score.append(s)
     
-    return available_moves[win_probability.index(max(win_probability))]
+    return available_moves[move_score.index(max(move_score))]
