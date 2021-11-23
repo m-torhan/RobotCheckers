@@ -1,7 +1,6 @@
-body {
+/* body {
     margin: 5%;
-    background-color: #202020;
-}
+} */
 
 header {
     margin-bottom: 50px;
@@ -57,4 +56,161 @@ header {
   -webkit-border-radius: 25px;
   -moz-border-radius: 25px;
   border-radius: 25px;
+}
+
+/*  NEW CSS ______ TO MERGE */
+
+body,span,* {
+    color: #6C6C6C;
+}
+
+a {
+    text-decoration-line: none !important;
+}
+
+.btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(17, 17, 17, 0.45) !important;
+}
+
+.btn-back:focus {
+    box-shadow: 0 0 0 0 white !important;
+}
+
+.form-range::-webkit-slider-thumb{
+    background: #6C6C6C !important;
+}
+
+.gray {
+    text-transform: uppercase;
+    font-weight: 600 !important;
+    background-color: #C4C4C4 !important;
+    color: #6C6C6C !important;
+}
+
+.gray_outline{
+    border-color:#6C6C6C !important;
+    background-color: #FFF !important;
+}
+
+.btn-check:checked+.gray_outline{
+    background-color: #6C6C6C !important; 
+    color: #E5E5E5;
+}
+
+.row-option .btn-check:focus+.btn, .row-option .btn:focus {
+    box-shadow: 0 0 0 .25rem rgba(82, 82, 82, 0.45);
+}
+
+.board-stats {
+    font-weight: 500;
+    color: #6C6C6C;
+}
+
+.gameboard td {
+    width: 12.5%;
+    padding-bottom: 12.5%;
+    position: relative;
+}
+
+.gameboard tr:nth-child(even)>td:nth-child(even), .gameboard tr:nth-child(odd)>td:nth-child(odd) {
+    background: #CCC
+}
+
+
+.gameboard tr:nth-child(odd)>td:nth-child(even), .gameboard tr:nth-child(even)>td:nth-child(odd) {
+    background: rgb(32, 131, 53)
+}
+
+.pawn {
+    position: absolute;
+    margin: 10%;
+    height: 80%;
+    width: 80%;
+    z-index: 50;
+    background-color: black;
+    -webkit-mask: url(../resources/img/circle.svg) no-repeat center;
+    mask: url(../resources/img/circle.svg) no-repeat center;
+}
+
+/* 
+    pawn colors and animations
+*/
+
+.black {
+    background-color: rgb(26, 26, 26);
+    border-radius:50%;
+}
+
+.white {
+    background-color: white;
+    border: 3px solid #919191;
+    border-radius:50%;
+}
+
+.red {
+    background-color: #dc3545;
+    border: 3px solid #660e17;
+    border-radius:50%;
+}
+
+.blue {
+    background-color: #0d6efd;
+    border: 3px solid #0c49a3;
+    border-radius:50%;
+}
+
+.animate-move{
+    transition: transform 1s linear;
+    /* transform: translate(250%, 250%); */
+    z-index: 501;
+}
+
+.fader{
+    transition: opacity 0.8s linear;
+    opacity: 0;
+}
+
+/* 
+    log box with scrollbar on game page
+*/
+
+.log-box {
+    width: 100%;
+    height: 20vh;
+    min-height: 300px;
+    background-color: #E5E5E5;
+}
+
+.log-box .hr-line {
+    height: 2px;
+    margin-left: 5%;
+}
+
+.log-box .content {
+    margin-left: 2.5%;
+    margin-right: 2.5%;
+    position: relative;
+    overflow-y: scroll;
+    height: 80%;
+}
+
+.card p{
+    margin-bottom:0;
+}
+
+.scrollbar::-webkit-scrollbar {
+    width: 10px;
+    background-color: #F5F5F5;
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #a8a8a8;
+}
+
+/* toasts */
+
+.attention {
+    background-color: rgb(226, 73, 73) !important;
+    color: white !important;
 }
