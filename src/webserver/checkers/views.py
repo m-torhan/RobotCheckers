@@ -29,17 +29,17 @@ def settings(request):
     global settings_thread
     if request.method != "POST":
         return redirect_params('index', {'status': 'invalid-request'})
-    
     try:
         json_response = json.loads(request.body)
     except:
         return redirect_params('index', {'status': 'settings-invalid-structure'})
-    print(json_response)
     serializer = GameSettingsSerializer(data=json_response)
     if not serializer.is_valid():
         return redirect_params('index', {'status': 'settings-validation-failed'})
 
+
     if settings_thread is not None and settings_thread.is_alive():
+
         return redirect_params('index', {'status': 'settings-already-set'})
 
     settings_thread = threading.Thread(target=channel_send_settings, args=(serializer.validated_data,),

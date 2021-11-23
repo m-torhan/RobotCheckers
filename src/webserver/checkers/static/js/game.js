@@ -1,7 +1,9 @@
+
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
     return new bootstrap.Tooltip(tooltipTriggerEl)
 })
+
 
 const chatSocket = new WebSocket(
     'ws://'
@@ -10,6 +12,7 @@ const chatSocket = new WebSocket(
     + 'default'
     + '/'
 );
+
 
 chatSocket.onopen = function (e) {
     addCommunicate("Połączenie z robotem pomyślne.");
@@ -29,11 +32,13 @@ chatSocket.onmessage = function (e) {
             break;
         case 'toast':
             addToast(data.message.msg);
+
             break;
         default:
             console.log(`Unsupported message type: ${expr}`);
     }
 };
+
 
 chatSocket.onclose = function (e) {
     addCommunicate("Połączenie z robotem zostało niespodziewanie zakończone!");

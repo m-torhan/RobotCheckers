@@ -60,6 +60,7 @@ class GameConsumer(WebsocketConsumer):
 
         taken_pawns = [[],[],[],[{"x": 2, "y": 3}]]
 
+
         move_ctr = 0
         while not end:
             status = GameStatus.ROBOTS_MOVE_STARTED if move_ctr % 2 == 0 else GameStatus.PLAYERS_MOVE_STARTED
@@ -76,6 +77,7 @@ class GameConsumer(WebsocketConsumer):
 
             move_ctr += 1
             end = move_ctr == 4
+
         self.group_send_game_status(game_status.GAME_FINISHED)
 
     def connect(self):
@@ -122,7 +124,9 @@ class GameConsumer(WebsocketConsumer):
     # Receive message from group
     def settings(self, event):
         message_content = event['message']
+
         if self._game_thread is None or not self._game_thread.is_alive():
+
             self._game_thread = threading.Thread(target=self.game, args=(message_content,),
                                                  kwargs={})
             self._game_thread.start()
