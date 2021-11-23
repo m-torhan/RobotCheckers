@@ -17,10 +17,6 @@ settings_thread = None
 def index(request):
     if request.method != 'GET':
         return JsonResponse({'error': 'Expected GET request'})
-
-    # parameters = request.GET
-    # print(parameters)
-
     return render(request, 'checkers/index.html')
 
 
@@ -32,17 +28,17 @@ def settings(request):
     global settings_thread
     if request.method != "POST":
         return redirect_params('index', {'status': 'invalid-request'})
-
     try:
         json_response = json.loads(request.body)
     except:
         return redirect_params('index', {'status': 'settings-invalid-structure'})
-
     serializer = GameSettingsSerializer(data=json_response)
     if not serializer.is_valid():
         return redirect_params('index', {'status': 'settings-validation-failed'})
 
-    if settings_thread is not None and settings_thread.isAlive():
+
+    if settings_thread is not None and settings_thread.is_alive():
+
         return redirect_params('index', {'status': 'settings-already-set'})
 
     settings_thread = threading.Thread(target=channel_send_settings, args=(serializer.validated_data,),
