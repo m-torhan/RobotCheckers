@@ -6,7 +6,6 @@ import urllib.parse
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.http import JsonResponse
-from django.http.response import HttpResponseRedirect
 from django.shortcuts import render, redirect
 
 from checkers.common.consts import GROUP_NAME
