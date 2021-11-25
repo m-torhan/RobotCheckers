@@ -2,6 +2,8 @@ import sys
 
 sys.path.append('../../../')
 
+from random import choice
+
 from src.robot.game_logic.checkers import Checkers
 
 def get_best_move(checkers, depth):
@@ -19,14 +21,17 @@ def get_best_move(checkers, depth):
         for node in layer:
             node.calculate_backtrack_score()
 
-    best_move = None
-    best_score = 0
+    best_score = -1e10
     for node in root.next_nodes:
-        if node.backtrack_score > best_score or best_move is None:
-            best_move = node.move
+        if node.backtrack_score > best_score:
             best_score = node.backtrack_score
     
-    return best_move
+    best_moves = []
+    for node in root.next_nodes:
+        if node.backtrack_score == best_score:
+            best_moves.append(node.move)
+    
+    return choice(best_moves)
 
 class MoveTreeNode(object):
     def __init__(self, node_checkers, player_num, node_move, score, node_depth):
@@ -98,5 +103,3 @@ class MoveTreeNode(object):
             self.__backtrack_score = max(scores) + self.__node_score
         else:
             self.__backtrack_score = min(scores) + self.__node_score
-        
-
