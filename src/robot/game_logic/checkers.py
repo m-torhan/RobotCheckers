@@ -88,11 +88,6 @@ class Checkers(object):
         for pos in move.chain[1:]:
             step_dest = pos
             if not self.__is_step_valid(step_board, step_src, step_dest):
-                print('invalid step')
-                print(step_board)
-                print(move.chain)
-                print(step_src, step_dest)
-                print()
                 return False
             
             step_board = self.__apply_step_to_board(step_board, step_src, step_dest)
@@ -114,10 +109,15 @@ class Checkers(object):
             step_board = self.__apply_step_to_board(step_board, step_src, step_dest)
 
             step_src = step_dest
+
+        # check if regular move was made while there was
+        # available move wtih oponent figures taking
+        if len(taken_figures) == 0:
+            for move in self.calc_available_moves_for_player(self.__player_turn):
+                if len(move.taken_figures) > 0:
+                    return False
         
         if set(taken_figures) != set(move.taken_figures):
-            print('Taken figures invalid')
-            print(taken_figures, move.taken_figures)
             return False
         
         return True
@@ -148,17 +148,14 @@ class Checkers(object):
     def __is_step_valid(self, step_board, step_src, step_dest):
         # move from empty square
         if step_board[step_src] == 0:
-            print('move from empty square')
             return False
 
         # moving not current turn players figure
         if self.__figure_player(step_board[step_src]) != self.__player_turn:
-            print('moving not current turn players figure')
             return False
         
         # there is figure on dest square
         if step_board[step_dest] != 0:
-            print('there is figure on dest square')
             return False
         
         # pawn
@@ -178,7 +175,6 @@ class Checkers(object):
             if abs(step_dest[0] - step_src[0]) == abs(step_dest[1] - step_src[1]):
                 return True
         
-        print('invalid step ret')
         return False
     
     def __step_taken_figures(self, step_board, step_src, step_dest):
