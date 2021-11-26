@@ -12,7 +12,7 @@ class Checkers(object):
         self.__player_turn = 0
         self.__board = np.zeros((8, 8), dtype=np.uint8)
         self.__winner = None
-        self.__no_taking_moves = 0
+        self.__no_taking_queen_moves = [0, 0]
 
         if board is not None:
             self.__board = board.copy()
@@ -52,6 +52,12 @@ class Checkers(object):
             if not self.is_move_valid(move):
                 return False
 
+        if len(move.taken_figures) == 0:
+            if self.__figure_type(self.__board[move.src]) == 1:
+                self.__no_taking_queen_moves[self.__player_turn] += 1
+        else:
+            self.__no_taking_queen_moves[self.__player_turn] = 0
+
         self.__board[move.dest] = self.__board[move.src]
         self.__board[move.src] = 0
 
@@ -62,9 +68,6 @@ class Checkers(object):
             self.__board[move.dest] = self.__promote_pawn_to_queen(self.__board[move.dest])
             promoted = True
 
-        if len(move.taken_figures) == 0:
-            self.__no_taking_moves += 1
-
         for taken in move.taken_figures:
             self.__board[taken] = 0
         
@@ -74,7 +77,7 @@ class Checkers(object):
             self.__end = True
             self.__winner = self.__oponent()
 
-        if self.__no_taking_moves > 128:
+        if min(self.__no_taking_queen_moves) > 15:
             self.__end = True
             self.__winner = -1
         
