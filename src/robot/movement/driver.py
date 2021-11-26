@@ -42,6 +42,8 @@ class MovementHandler(object):
         self.__instr_list = []
         self.__instr_handler_thread = threading.Thread(target=self.__instr_handler)
         self.__speed = config.max_speed
+        self.__interrupt = False
+        self.__pause = False
 
     @property
     def pos(self):
@@ -128,6 +130,15 @@ class MovementHandler(object):
     def calibrate(self):
         self.__instr_list.append(f'c')
 
+    def interrupt(self):
+        self.__interrupt = True
+
+    def pause(self):
+        self.__pause = True
+
+    def unpause(self):
+        self.__pause = False
+
     def __instr_handler(self):
         while self.__run:
             if len(self.__instr_list):
@@ -180,6 +191,10 @@ class MovementHandler(object):
                     
                     else:
                         self.__log(f'Unknown instruction: {instr}')
+
+                    if self.__interrupt:
+                        self.__instr_list.clear()
+                        self.__interrupt = False
 
                 except Exception as ex:
                     self.__log(f'Instr handling error: {traceback.format_exc()}')
@@ -259,18 +274,31 @@ class MovementHandler(object):
         GPIO.output(config.pin_motor_A_dir, GPIO.HIGH if delta_a > 0 else GPIO.LOW)
         GPIO.output(config.pin_motor_B_dir, GPIO.HIGH if delta_b > 0 else GPIO.LOW)
 
+        dir_a = (-1, 1)[delta_a > 0]
+        dir_b = (-1, 1)[delta_b > 0]
+
         delta_a = abs(delta_a)
         delta_b = abs(delta_b)
 
-        def __move_motor(motor_pin, steps, speed):
+        def __move_motor(motor_pin, steps, speed, steps_done):
             for i in range(steps):
+                steps_done[0] = i
+                if self.__interrupt:
+                    break
+                
+                while self.__pause:
+                    time.sleep(.01)
+
                 GPIO.output(motor_pin, GPIO.HIGH)
                 time.sleep(1./speed)
                 GPIO.output(motor_pin, GPIO.LOW)
                 time.sleep(1./speed)
+
+        thread_a_steps_done = [0]
+        thread_b_steps_done = [0]
         
-        thread_a = threading.Thread(target=__move_motor, args=(config.pin_motor_A_step, delta_a, self.__speed))
-        thread_b = threading.Thread(target=__move_motor, args=(config.pin_motor_B_step, delta_b, self.__speed))
+        thread_a = threading.Thread(target=__move_motor, args=(config.pin_motor_A_step, delta_a, self.__speed, thread_a_steps_done))
+        thread_b = threading.Thread(target=__move_motor, args=(config.pin_motor_B_step, delta_b, self.__speed, thread_b_steps_done))
 
         thread_a.start()
         thread_b.start()
@@ -278,8 +306,19 @@ class MovementHandler(object):
         thread_a.join()
         thread_b.join()
 
-        self.__pos[0] += delta_x
-        self.__pos[1] += delta_y
+        if self.__interrupt:
+            delta_a_done = thread_a_steps_done[0]*dir_a
+            delta_b_done = thread_b_steps_done[0]*dir_b
+
+            delta_x_done = (delta_b_done + delta_a_done)//2
+            delta_y_done = (delta_b_done - delta_a_done)//2
+
+            self.__pos[0] += delta_x_done
+            self.__pos[1] += delta_y_done
+
+        else:
+            self.__pos[0] += delta_x
+            self.__pos[1] += delta_y
 
     def __move_to_square_inner(self, col, row):
         if row < 0 or row > 7:

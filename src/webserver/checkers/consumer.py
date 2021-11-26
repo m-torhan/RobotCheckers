@@ -23,35 +23,60 @@ class GameConsumer(WebsocketConsumer):
             channel_layer = get_channel_layer()
         end = False
 
+        # trzeba by wysłać pierwszy game board
         for game_status in [GameStatus.BOARD_PREPARATION_STARTED,
                             GameStatus.BOARD_PREPARATION_ENDED,
                             GameStatus.READY_TO_PLAY]:
+
             self.group_send_game_status(game_status)
             time.sleep(1)
+
+        PLAYER_STARTS_BOARD = "33333333333300000000111111111111"
+        ROBOT_STARTS_BOARD = "11111111111100000000333333333333"
+
+        # inicjalne wysłanie planszy
+        move = {
+                "id": -1,
+                "new_board_status" : ROBOT_STARTS_BOARD,
+                "move_steps": [],
+                "taken_pawns": []
+            }
+        self.group_send_move(move)
+        time.sleep(1)
+
+        board_statuses = [  # porozdzielane rzędami dla czytelności podczas testowania
+            "1111"+"1111"+"0111"+"1000"+"0000"+"3333"+"3333"+"3333",
+            "1111"+"1111"+"0111"+"1000"+"3000"+"0333"+"3333"+"3333",
+            "1111"+"1111"+"0011"+"1100"+"3000"+"0333"+"3333"+"3333",
+            "1111"+"1111"+"0311"+"1000"+"0000"+"0333"+"3333"+"3333",
+            ]
+
+        moves = [
+            [{"x": 1, "y": 2}, {"x": 0, "y": 3}],
+            [{"x": 0, "y": 5}, {"x": 1, "y": 4}],
+            [{"x": 3, "y": 2}, {"x": 2, "y": 3}],
+            [{"x": 1, "y": 4}, {"x": 3, "y": 2}],
+            ]
+
+        taken_pawns = [[],[],[],[{"x": 2, "y": 3}]]
+
 
         move_ctr = 0
         while not end:
             status = GameStatus.ROBOTS_MOVE_STARTED if move_ctr % 2 == 0 else GameStatus.PLAYERS_MOVE_STARTED
             self.group_send_game_status(status)
             time.sleep(0.5)
-            board_size = 8
-            board_status = np.full((board_size, board_size), move_ctr % 5, dtype=np.uint8)
-            board_status_flat = board_status.flatten()
             move = {
                 "id": move_ctr,
-                "new_board_status": ''.join(str(x) for x in board_status_flat),
-                "from": {"x": 1, "y": 0},
-                "to": {"x": 3, "y": 4},
-                "taken_pawns": [
-                    {"x": 1, "y": 0},
-                    {"x": 1, "y": 0}
-                ]
+                "new_board_status" : board_statuses[move_ctr],
+                "move_steps": moves[move_ctr],
+                "taken_pawns": taken_pawns[move_ctr]
             }
             self.group_send_move(move)
-            time.sleep(2)
+            time.sleep(3)
 
             move_ctr += 1
-            end = move_ctr == 10
+            end = move_ctr == 4
 
         self.group_send_game_status(game_status.GAME_FINISHED)
 
@@ -99,7 +124,9 @@ class GameConsumer(WebsocketConsumer):
     # Receive message from group
     def settings(self, event):
         message_content = event['message']
-        if self._game_thread is None or not self._game_thread.isAlive():
+
+        if self._game_thread is None or not self._game_thread.is_alive():
+
             self._game_thread = threading.Thread(target=self.game, args=(message_content,),
                                                  kwargs={})
             self._game_thread.start()
