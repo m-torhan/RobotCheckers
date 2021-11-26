@@ -28,7 +28,7 @@ class GameConsumer(WebsocketConsumer):
                             GameStatus.BOARD_PREPARATION_ENDED,
                             GameStatus.READY_TO_PLAY]:
 
-            self.group_send_game_status(game_status)
+            self.group_send_game_status(game_status,"TEMP")
             time.sleep(1)
 
         PLAYER_STARTS_BOARD = "33333333333300000000111111111111"
@@ -96,15 +96,16 @@ class GameConsumer(WebsocketConsumer):
 
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json['message']
+        self.group_send_message(text_data_json)
 
-        self.group_send_message(message)
-
-    def group_send_game_status(self, status: GameStatus):
+    def group_send_game_status(self, status: GameStatus,content:str=''):
         self.group_send_message(
             {
                 'type': 'game_status',
-                'message': {'game_status': status.name}
+                'message': {
+                    'game_status': status.name,
+                    'content': content
+                }
             }
         )
 
@@ -142,6 +143,11 @@ class GameConsumer(WebsocketConsumer):
         message_type = event['type']
         message_content = event['message']
         self.send_message(message_type, message_content)
+
+    # Receive message from group
+    def user_action(self, event):
+        message_content = event['message']['content']
+        # self._game.user_action(message_content)
 
     def send_message(self, message_type, message_content):
         # Send message to WebSocket
