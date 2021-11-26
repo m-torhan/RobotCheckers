@@ -1,11 +1,9 @@
-
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
     return new bootstrap.Tooltip(tooltipTriggerEl)
 })
 
-
-const chatSocket = new WebSocket(
+const webSocket = new WebSocket(
     'ws://'
     + window.location.host
     + '/ws/checkers/'
@@ -13,35 +11,34 @@ const chatSocket = new WebSocket(
     + '/'
 );
 
-
-chatSocket.onopen = function (e) {
-    addCommunicate("Połączenie z robotem pomyślne.");
+webSocket.onopen = function (e) {
+    addEventToRegister("Połączenie z robotem pomyślne.");
 }
 
-chatSocket.onmessage = function (e) {
+webSocket.onmessage = function (e) {
     const data = JSON.parse(e.data);
     const message_type = data.type;
     switch (message_type) {
         case 'game_status':
             updateWhosTurn(data.message.game_status);
             gameStatusHandler(data.message.game_status);
+            addToast(data.message.content)
             break;
         case 'move':
             document.getElementsByClassName("turn")[0].children[1].innerHTML = data.message.id+1;
             movePawn(data.message.move_steps, data.message.new_board_status , data.message.taken_pawns);
+            
             break;
         case 'toast':
             addToast(data.message.msg);
-
             break;
         default:
             console.log(`Unsupported message type: ${expr}`);
     }
 };
 
-
-chatSocket.onclose = function (e) {
-    addCommunicate("Połączenie z robotem zostało niespodziewanie zakończone!");
+webSocket.onclose = function (e) {
+    addEventToRegister("Połączenie z robotem zostało niespodziewanie zakończone!");
     addToast("Komunikacja zerwana");
 };
 
@@ -62,6 +59,7 @@ function initBoard(){
       }
       table.appendChild(row);
     }
+    sessionStorage.setItem('whoMoves', 'Gracz');
   };
 
   // takes flatten string representing board and insert pawn on the right places
@@ -91,14 +89,15 @@ function initBoard(){
 
   function updateWhosTurn(whosTurn){
     if(whosTurn == "ROBOTS_MOVE_STARTED"){
-      document.getElementsByClassName("whos-move")[0].children[1].innerHTML = "Robot"
+      document.getElementsByClassName("whos-move")[0].children[1].innerHTML = "Robot";
     }
     else if(whosTurn == "PLAYERS_MOVE_STARTED"){
-      document.getElementsByClassName("whos-move")[0].children[1].innerHTML = "Gracz"
+      document.getElementsByClassName("whos-move")[0].children[1].innerHTML = "Gracz";
     }
+    sessionStorage.setItem('whoMoves', sessionStorage.getItem('whoMoves')=='Gracz'?'Robot':'Gracz');
   }
 
-  function addCommunicate(text){
+  function addEventToRegister(text){
     const p = document.createElement("p");
     p.innerHTML =  "> "+ text;
     var scrollArea = document.getElementsByClassName("card")[0];
@@ -115,9 +114,12 @@ function initBoard(){
     for (let i = 0; i < move_list.length - 1; i++){
       x += move_list[i+1]["x"] - move_list[i]["x"];
       y += move_list[i+1]["y"] - move_list[i]["y"];
+      
       document.getElementsByTagName("td")[move_list[0]["y"]*8+move_list[0]["x"]].children[0].classList.add("animate-move");
       document.getElementsByTagName("td")[move_list[0]["y"]*8+move_list[0]["x"]].children[0].style.transform = 
       "translate(" + (x)*125 + "%," + (y)*125 + "%)";
+
+      addEventToRegister(`${sessionStorage.getItem('whoMoves')} wykonał ruch z pola (${move_list[i]["x"]},${move_list[i]["y"]}) do (${move_list[i+1]["x"]},${move_list[i+1]["y"]})`);
 
       await sleep(1000);
     }
@@ -141,9 +143,30 @@ function initBoard(){
     await sleep(1000);
   }
 
-  async function addToast(communicate){
-    document.getElementsByClassName("toast-body")[0].innerText = communicate;
-    var toastLiveExample = document.getElementById("liveToast");
-    var toast = new bootstrap.Toast(toastLiveExample);
-    toast.show();      
+  async function addToast(content){
+    if(content!=''){
+      document.getElementsByClassName("toast-body")[0].innerText = content;
+      var toastLiveExample = document.getElementById("liveToast");
+      var toast = new bootstrap.Toast(toastLiveExample);
+      toast.show();
+    }
+  }
+
+  function sendUserAction(type){
+    webSocket.send(JSON.stringify({'type':'user_action','message': {'content':type}}))
+    switch(type){
+      case 'end_game':
+        addToast("Avengers: END GAME")
+        break;
+      case 'stop_robot':
+        addToast("Zatrzymaj ruch robota")
+        break;
+      case 'resume_robot':
+        addToast("Wznowienie ruchu robota.")
+        break;
+      default:
+        break;
+    }
+
+
   }
