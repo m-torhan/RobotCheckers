@@ -87,17 +87,28 @@ class RobotCheckers(object):
                 # no game to play
                 continue
             
-            if self.__checkers.player_turn == self.__ai_player.num:
-                robot_move, _, promoted = self.__ai_player.make_move(self.__checkers)
-                self.__make_move(robot_move, promoted)
+            while not self.__checkers.end:
+                if self.__checkers.player_turn == self.__ai_player.num:
+                    robot_move, _, promoted = self.__ai_player.make_move(self.__checkers)
+                    self.__make_move(robot_move, promoted)
 
-            else:
-                pass
-                
-                # here get and validate player move
+                else:
+                    player_move = self.__get_player_move()
+                    
+                    if self.__checkers.is_move_valid(player_move):
+                        self.__checkers.make_move(player_move)
+
+                    else:
+                        # invalid move
+                        pass
     
+    def __get_player_move(self):
+        board_code, _, _, _ = self.__camera_handler.read_board()
+
+        return self.__checkers.calc_move_between_boards(board_code)
+
     def __make_move(self, move, promoted):
-        board_code, board_pos, free_pawns, _ = self.__camera_handler.read_board()
+        _, board_pos, free_pawns, _ = self.__camera_handler.read_board()
 
         self.__robot_arm_moving = True
         def interrupt_thread_fun():

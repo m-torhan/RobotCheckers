@@ -145,8 +145,7 @@ class Checkers(object):
         
         return moves
     
-    @classmethod
-    def calc_move_between_boards(src_board, dest_board):
+    def calc_move_between_boards(self, new_board):
         pass
     
     def __is_step_valid(self, step_board, step_src, step_dest):
