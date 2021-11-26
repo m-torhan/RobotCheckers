@@ -42,6 +42,7 @@ class MovementHandler(object):
         self.__instr_list = []
         self.__instr_handler_thread = threading.Thread(target=self.__instr_handler)
         self.__speed = config.max_speed
+        self.__all_done = True
 
     @property
     def pos(self):
@@ -58,6 +59,10 @@ class MovementHandler(object):
     @property
     def calibrated(self):
         return self.__calibrated
+    
+    @property
+    def all_done(self):
+        return self.__all_done
 
     def start(self):
         self.__instr_handler_thread.start()
@@ -131,6 +136,7 @@ class MovementHandler(object):
     def __instr_handler(self):
         while self.__run:
             if len(self.__instr_list):
+                self.__all_done = False
                 try:
                     instr = self.__instr_list.pop(0).split()
                     if instr[0] == 'mtp':
@@ -183,6 +189,9 @@ class MovementHandler(object):
 
                 except Exception as ex:
                     self.__log(f'Instr handling error: {traceback.format_exc()}')
+            
+            else:
+                self.__all_done = True
 
     def __step_X_forward_inner(self):
         if self.__pos[0] >= self.__X_range[1]:

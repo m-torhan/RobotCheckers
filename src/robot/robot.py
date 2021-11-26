@@ -17,6 +17,7 @@ class RobotCheckers(object):
         self.__play = False
 
         self.__calibrated = False
+        self.__robot_arm_moving = False
         self.__run = True
     
     @property
@@ -87,17 +88,56 @@ class RobotCheckers(object):
                 continue
             
             if self.__checkers.player_turn == self.__ai_player.num:
-                robot_move, ret = self.__ai_player.make_move(self.__checkers)
-
-                # here robot should make move
+                robot_move, _, promoted = self.__ai_player.make_move(self.__checkers)
+                self.__make_move(robot_move, promoted)
 
             else:
                 pass
                 
                 # here get and validate player move
     
-    def __make_move(self, move):
-        pass
+    def __make_move(self, move, promoted):
+        board_code, board_pos, free_pawns, _ = self.__camera_handler.read_board()
 
-    def __promote_pawn(self, pawn_pos):
-        pass
+        self.__robot_arm_moving = True
+        def interrupt_thread_fun():
+            interrupted = False
+            while self.__robot_arm_moving:
+                _, _, _, hand_above_board = self.__camera_handler.read_board()
+                if hand_above_board and not interrupted:
+                    #self.__movement_handler.interrupt()
+                    interrupted = True
+                
+                if not hand_above_board and interrupted:
+                    #self.__movement_handler.continue()
+                    interrupted = False
+        
+        interrupt_thread = threading.Thread(target=interrupt_thread_fun)
+        interrupt_thread.start()
+
+        # move selected figure
+        self.__movement_handler.move_pawn_from_pos_to_pos(board_pos[move.src], board_pos[move.dest])
+
+        # remove taken figures
+        for figrure_pos in move.taken_figure:
+            new_pos = (30, 30) # self.__camera_handler.find_free_pos_outside_board()
+            self.__movement_handler.move_pawn_from_pos_to_pos(board_pos[figrure_pos], new_pos)
+        
+        # promote pawn
+        if promoted:
+            new_pos = (30, 30) # self.__camera_handler.find_free_pos_outside_board()
+            self.__movement_handler.move_pawn_from_pos_to_pos(board_pos[move.dest], new_pos)
+
+            if self.__ai_player.num == 0:
+                queen_pos = free_pawns['blue'][0]
+            else:
+                queen_pos = free_pawns['red'][0]
+
+            self.__movement_handler.move_pawn_from_pos_to_pos(queen_pos, board_pos[move.dest])
+        
+        while not self.__movement_handler.all_done:
+            # wait for moves to be done
+            pass
+
+        self.__robot_arm_moving = False
+        interrupt_thread.join()

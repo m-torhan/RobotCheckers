@@ -19,7 +19,7 @@ class AIPlayerRandom(AIPlayer):
         available_moves = checkers.calc_available_moves_for_player(self.num)
         move = random.choice(available_moves)
 
-        ret, _ = checkers.make_move(move)
+        ret = checkers.make_move(move)
         
         return move, ret
 
@@ -31,7 +31,7 @@ class AIPlayerMinimax(AIPlayer):
     def make_move(self, checkers):
         move = minimax.get_best_move(checkers, self.__max_depth)
 
-        ret, _ = checkers.make_move(move)
+        ret = checkers.make_move(move)
         
         return move, ret
         
@@ -43,6 +43,6 @@ class AIPlayerMonteCarlo(AIPlayer):
     def make_move(self, checkers):
         move = monte_carlo.get_best_move(checkers, self.__simulations)
         
-        ret, _ = checkers.make_move(move)
+        ret = checkers.make_move(move)
         
         return move, ret
