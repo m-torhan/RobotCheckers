@@ -64,6 +64,9 @@ class CameraHandler(object):
     
     def read_board(self):
         objects_positions = self.__detect_objects_positions()
+        
+        if objects_positions is None:
+            return None
 
         board_code = np.zeros((8, 8), dtype=np.uint8)
         board_pos = np.zeros((8, 8, 2), dtype=np.float64)

@@ -145,6 +145,10 @@ class Checkers(object):
         
         return moves
     
+    @classmethod
+    def calc_move_between_boards(src_board, dest_board):
+        pass
+    
     def __is_step_valid(self, step_board, step_src, step_dest):
         # move from empty square
         if step_board[step_src] == 0:
