@@ -1,10 +1,4 @@
-import sys
-
-sys.path.append('../../../')
-
 from random import choice
-
-from src.robot.game_logic.checkers import Checkers
 
 def get_best_move(checkers, depth):
     player_num = checkers.player_turn

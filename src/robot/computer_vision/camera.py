@@ -1,10 +1,15 @@
-import os
+import sys
+import os 
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(dir_path, '../../../'))
+
 import numpy as np
 import cv2
 import threading
 import time
 
-import camera_config
+import src.robot.computer_vision.camera_config as camera_config
 
 class CameraHandler(object):
     def __init__(self, debug=False):

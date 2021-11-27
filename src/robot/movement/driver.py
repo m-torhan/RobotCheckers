@@ -1,10 +1,16 @@
+import sys
+import os 
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(dir_path, '../../../'))
+
 from RPi import GPIO
 import traceback
 import threading
 import datetime
 import time
 
-import driver_config
+import src.robot.movement.driver_config as driver_config
 
 class MovementHandler(object):
     def __init__(self):

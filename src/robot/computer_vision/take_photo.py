@@ -1,8 +1,13 @@
+import sys
+import os 
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(dir_path, '../../../'))
+
 import cv2
 import time
-import os
 
-import camera
+import src.robot.computer_vision.camera as camera
 
 cam = camera.CameraHandler()
 cam.start()
