@@ -57,7 +57,7 @@ class MovementHandler(object):
     @property
     def Y_range(self):
         return (self.__Y_range[0]/driver_config.steps_per_cm - driver_config.board_pos['y'][0],
-                self.__Y_range[1]/driver_config.steps_per_cm -  - driver_config.board_pos['y'][0])
+                self.__Y_range[1]/driver_config.steps_per_cm - driver_config.board_pos['y'][0])
     
     @property
     def calibrated(self):
