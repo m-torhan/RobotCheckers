@@ -2,6 +2,8 @@ import sys
 
 sys.path.append('../')
 
+from random import choice
+
 from game_logic.checkers import Checkers
 
 def get_best_move(checkers, depth):

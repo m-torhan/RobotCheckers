@@ -9,6 +9,8 @@ class Checkers(object):
         self.__player_turn = 0
         self.__board = np.zeros((8, 8), dtype=np.uint8)
         self.__winner = None
+        self.__all_moves = []
+        self.__turn_counter = 0
         self.__no_taking_queen_moves = [0, 0]
 
         if board is not None:
@@ -37,7 +39,15 @@ class Checkers(object):
     @property
     def winner(self):
         return self.__winner
+    
+    @property
+    def all_moves(self):
+        return self.__all_moves
 
+    @property
+    def turn_counter(self):
+        return self.__turn_counter
+    
     def copy(self):
         checkers_copy = Checkers(self.__board.copy())
         checkers_copy.__player_turn = self.__player_turn
@@ -72,11 +82,14 @@ class Checkers(object):
 
         if len(self.calc_available_moves_for_player(self.__player_turn)) == 0:
             self.__end = True
-            self.__winner = self.__oponent()
+            self.__winner = self.oponent()
 
         if min(self.__no_taking_queen_moves) > 15:
             self.__end = True
             self.__winner = -1
+        
+        move.promoted = promoted
+        self.__all_moves.append(move)
         
         return True, promoted
 
@@ -147,6 +160,11 @@ class Checkers(object):
     
     def calc_move_between_boards(self, new_board):
         pass
+
+    def oponent(self, player=None):
+        if player is None:
+            return 1 - self.__player_turn
+        return 1 - player
     
     def __is_step_valid(self, step_board, step_src, step_dest):
         # move from empty square
@@ -169,7 +187,7 @@ class Checkers(object):
 
             y_dir = (1, -1)[self.__player_turn]
             if abs(step_dest[0] - step_src[0]) == 2 and step_dest[1] - step_src[1] == 2*y_dir and\
-               self.__figure_player(step_board[(step_src[0] + step_dest[0])//2, (step_src[1] + step_dest[1])//2]) == self.__oponent():
+               self.__figure_player(step_board[(step_src[0] + step_dest[0])//2, (step_src[1] + step_dest[1])//2]) == self.oponent():
                 # taking move
                 return True
         
@@ -184,7 +202,7 @@ class Checkers(object):
         # pawn
         if self.__figure_type(step_board[step_src]) == 0:
             if abs(step_src[0] - step_dest[0]) == 2 and abs(step_src[1] - step_dest[1]) == 2 and\
-               self.__figure_player(step_board[(step_src[0] + step_dest[0])//2, (step_src[1] + step_dest[1])//2]) == self.__oponent():
+               self.__figure_player(step_board[(step_src[0] + step_dest[0])//2, (step_src[1] + step_dest[1])//2]) == self.oponent():
                 # taking move
                 return [((step_src[0] + step_dest[0])//2, (step_src[1] + step_dest[1])//2)]
         
@@ -199,7 +217,7 @@ class Checkers(object):
                 for i in range(fields_between):
                     pos = (step_src[0] + (i + 1)*x_dir,
                            step_src[1] + (i + 1)*y_dir)
-                    if self.__figure_player(step_board[pos]) == self.__oponent():
+                    if self.__figure_player(step_board[pos]) == self.oponent():
                         pawns.append(pos)
 
                 return pawns
@@ -207,7 +225,8 @@ class Checkers(object):
         return None
 
     def __next_player(self):
-        self.__player_turn = self.__oponent()
+        self.__player_turn = self.oponent()
+        self.__turn_counter += 1
 
     def __calc_available_moves(self, figure_pos):
         figure_type = self.__figure_type(self.__board[figure_pos])
@@ -237,7 +256,7 @@ class Checkers(object):
                 if 0 <= new_pos[0] <= 7 and\
                    0 <= new_pos[1] <= 7 and\
                    self.__board[new_pos] == 0 and\
-                   self.__figure_player(self.__board[taking_pos]) == self.__oponent(player):
+                   self.__figure_player(self.__board[taking_pos]) == self.oponent(player):
                     next_taking_possible = True
 
                     new_board = board.copy()
@@ -295,7 +314,7 @@ class Checkers(object):
 
                     if 0 <= new_x <= 7 and\
                        0 <= new_y <= 7 and\
-                       self.__figure_player(board[(new_x, new_y)]) == self.__oponent(player):
+                       self.__figure_player(board[(new_x, new_y)]) == self.oponent(player):
                         taking_pos = (new_x, new_y)
                         new_x += x_dir
                         new_y += y_dir
@@ -339,11 +358,6 @@ class Checkers(object):
                         new_y += y_dir
 
         return available_moves
-
-    def __oponent(self, player=None):
-        if player is None:
-            return 1 - self.__player_turn
-        return 1 - player
     
     @staticmethod
     def __apply_step_to_board(board, step_src, step_dest):
@@ -380,6 +394,7 @@ class Move(object):
     def __init__(self, chain, taken_figures):
         self.__chain = chain
         self.__taken_figures = taken_figures
+        self.__promoted = False
     
     @property
     def src(self):
@@ -396,3 +411,11 @@ class Move(object):
     @property
     def taken_figures(self):
         return self.__taken_figures
+
+    @property
+    def promoted(self):
+        return self.__promoted
+    
+    @promoted.setter
+    def promoted(self, value):
+        self.__promoted = value

@@ -22,10 +22,10 @@ def get_best_move(checkers, simulations):
         for _ in range(simulations):
             while not new_checkers.end:
                 if new_checkers.player_turn == player_1.num:
-                    move, _ = player_1.make_move(new_checkers)
+                    move, _, _ = player_1.make_move(new_checkers)
 
                 elif new_checkers.player_turn == player_2.num:
-                    move, _ = player_2.make_move(new_checkers)
+                    move, _, _ = player_2.make_move(new_checkers)
                 
             if new_checkers.winner == player_num:
                 s += 5

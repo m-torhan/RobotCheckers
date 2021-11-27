@@ -26,6 +26,7 @@ class RobotCheckers(object):
         self.__ai_player_2 = None
         self.__play = False
 
+        self.__player_move_valid = True
         self.__robot_arm_moving = False
         self.__run = True
     
@@ -55,6 +56,47 @@ class RobotCheckers(object):
     @property
     def board_from_camera(self):
         return self.__camera_handler.read_board()[0]
+    
+    @property
+    def board_from_checkers(self):
+        if self.__checkers is not None:
+            return self.__checkers.board
+        return None
+    
+    @property
+    def all_moves(self):
+        if self.__checkers is not None:
+            return self.__checkers.all_moves
+        return None
+    
+    @property
+    def turn_counter(self):
+        if self.__checkers is not None:
+            return self.__checkers.turn_counter
+        return None
+    
+    @property
+    def winner(self):
+        if self.__checkers is not None:
+            return self.__checkers.winner
+        return None
+    
+    @property
+    def player_turn(self):
+        if self.__checkers is not None:
+            return self.__checkers.player_turn != self.__ai_player.num
+        return None
+    
+    @property
+    def player_move_valid(self):
+        return self.__player_move_valid
+    
+    @property
+    def player_available_moves(self):
+        if self.__checkers is not None:
+            return self.__checkers.calc_available_moves_for_player(
+                self.__checkers.oponent(self.__ai_player.num))
+        return None
     
     def start(self):
         self.__movement_handler.start()
@@ -122,13 +164,12 @@ class RobotCheckers(object):
                     player_move = self.__get_player_move()
                     
                     if player_move is not None and self.__checkers.is_move_valid(player_move):
+                        self.__player_move_valid = True
                         self.__checkers.make_move(player_move)
 
                     else:
-                        # invalid move
-                        pass
+                        self.__player_move_valid = False
 
-    
     def __get_player_move(self):
         timer = None
         while self.__run:
