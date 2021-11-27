@@ -60,6 +60,7 @@ function initBoard(){
       table.appendChild(row);
     }
     sessionStorage.setItem('whoMoves', 'Gracz');
+    sessionStorage.setItem('toggleStartStopRobot','0')
   };
 
   // takes flatten string representing board and insert pawn on the right places
@@ -123,7 +124,22 @@ function initBoard(){
 
       await sleep(1000);
     }
- 
+
+    // promote pawns
+    if(move_list.length!==0 && (move_list[move_list.length-1]['y'] === 0 || move_list[move_list.length-1]['y'] === 7 )){
+      const pawn = document.getElementsByTagName("td")[move_list[0]["y"]*8+move_list[0]["x"]].children[0];
+      if(pawn.classList.contains('white')){
+        pawn.classList.remove('white');
+        pawn.classList.add('promotion')
+        pawn.classList.add('blue');
+      }
+      if(pawn.classList.contains('black')){
+        pawn.classList.remove('black');
+        pawn.classList.add('promotion');
+        pawn.classList.add('red');
+      }
+    }
+
     // fade away taken pawns
     for (let index = 0; index < taken_pawns.length; index++) {
       const element = taken_pawns[index];
@@ -152,21 +168,25 @@ function initBoard(){
     }
   }
 
-  function sendUserAction(type){
-    webSocket.send(JSON.stringify({'type':'user_action','message': {'content':type}}))
-    switch(type){
-      case 'end_game':
-        addToast("Avengers: END GAME")
-        break;
-      case 'stop_robot':
-        addToast("Zatrzymaj ruch robota")
-        break;
-      case 'resume_robot':
-        addToast("Wznowienie ruchu robota.")
-        break;
-      default:
-        break;
+  function toggleStartStopRobot(){
+    let toggleStatus = sessionStorage.getItem('toggleStartStopRobot'); 
+    if(toggleStatus === '0'){
+      sendUserAction('stop_robot');
+      document.getElementById('startStopRobotButton').innerText = 'Wznów ruch robota';
+    }else{
+      sendUserAction('resume_robot');
+      document.getElementById('startStopRobotButton').innerText = 'Zatrzymaj robota';
     }
+    sessionStorage.setItem('toggleStartStopRobot', toggleStatus==='0'?'1':'0')
+  }
 
+  let UserActions = {
+    'end_game' : 'Żądanie zakończenia rozgrywki wysłane do robota.',
+    'stop_robot' : 'Żądanie wstrzymania ruchu robota zostało wysłane.',
+    'resume_robot' : 'Żądanie wznowienia ruchu ramienia zostało wysłane.'
+  }
 
+  function sendUserAction(type){
+    webSocket.send(JSON.stringify({'type':'user_action','message': {'content':type}}));
+    addToast(UserActions[type]);
   }
