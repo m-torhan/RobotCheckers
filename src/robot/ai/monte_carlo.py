@@ -1,8 +1,8 @@
 import sys
 
-sys.path.append('../')
+sys.path.append('../../../')
 
-from game_logic.checkers import Checkers
+from src.robot.game_logic.checkers import Checkers
 import ai_player
 
 def get_best_move(checkers, simulations):
