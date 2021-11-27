@@ -1,6 +1,3 @@
-from os import stat
-import sys
-from typing import Tuple
 import numpy as np
 
 class Checkers(object):

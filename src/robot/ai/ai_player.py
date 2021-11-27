@@ -1,7 +1,13 @@
+import sys
+import os 
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(dir_path, '../../../'))
+
 import random
 
-import minimax
-import monte_carlo
+import src.robot.ai.minimax as minimax
+import src.robot.ai.monte_carlo as monte_carlo
 
 class __AIPlayer(object):
     def __init__(self, num):

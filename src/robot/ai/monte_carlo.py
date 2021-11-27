@@ -1,9 +1,10 @@
 import sys
+import os
 
-sys.path.append('../../../')
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(dir_path, '../../../'))
 
-from src.robot.game_logic.checkers import Checkers
-import ai_player
+import src.robot.ai.ai_player as ai_player
 
 def get_best_move(checkers, simulations):
     player_num = checkers.player_turn

@@ -1,8 +1,9 @@
 import sys
-
-sys.path.append('../../../')
-
 import os
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(dir_path, '../../../'))
+
 import pygame
 from pygame.locals import *
 from time import perf_counter, sleep
@@ -11,7 +12,7 @@ import cv2
 import numpy as np
 import random
 
-import ai_player
+import src.robot.ai.ai_player as ai_player
 from src.robot.game_logic.checkers import Checkers
 
 rec_vid = False

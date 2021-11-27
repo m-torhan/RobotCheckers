@@ -1,10 +1,12 @@
 import sys
+import os 
 
-sys.path.append('.')
-sys.path.append('./ai')
-sys.path.append('./computer_vision')
-sys.path.append('./game_logic')
-sys.path.append('./movement')
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(dir_path, '../'))
+sys.path.append(os.path.join(dir_path, './ai'))
+sys.path.append(os.path.join(dir_path, './computer_vision'))
+sys.path.append(os.path.join(dir_path, './game_logic'))
+sys.path.append(os.path.join(dir_path, './movement'))
 
 import threading
 import numpy as np
