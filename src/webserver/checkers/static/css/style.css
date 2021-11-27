@@ -118,6 +118,9 @@ input[type="range"]::-moz-range-progress {
   opacity: 0;
 }
 
+.promotion {
+  transition: background-color 1s
+}
 /* 
     log box with scrollbar on game page
 */
