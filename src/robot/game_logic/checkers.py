@@ -159,7 +159,46 @@ class Checkers(object):
         return moves
     
     def calc_move_between_boards(self, new_board):
-        pass
+        curr_board_player_figures = self.__figure_player(self.__board) == self.__player_turn
+        new_board_player_figures = self.__figure_player(new_board) == self.__player_turn
+        curr_board_oponent_figures = self.__figure_player(self.__board) == self.oponent()
+        new_board_oponent_figures = self.__figure_player(new_board) == self.oponent()
+
+        moved_figures_src = (curr_board_player_figures == True) & (new_board_player_figures == False)
+
+        if np.sum(moved_figures_src) != 1:
+            return None
+        
+        moved_figures_dest = (curr_board_player_figures == False) & (new_board_player_figures == True)
+
+        if np.sum(moved_figures_dest) != 1:
+            return None
+        
+        moved_figure_src = np.where(moved_figures_src)
+        moved_figure_src = (moved_figure_src[0][0], moved_figure_src[1][0])
+
+        moved_figure_dest = np.where(moved_figures_dest)
+        moved_figure_dest = (moved_figure_dest[0][0], moved_figure_dest[1][0])
+
+        available_moves = self.__calc_available_moves(moved_figure_src)
+        available_moves = list(filter(lambda move: move.dest == moved_figure_dest, available_moves))
+
+        taken_figures = (curr_board_oponent_figures == True) & (new_board_oponent_figures == False)
+        placed_oponent_figures = (curr_board_oponent_figures == False) & (new_board_oponent_figures == True)
+
+        if np.sum(placed_oponent_figures) > 0:
+            return None
+        
+        taken_figures = list(zip(*list(map(list, np.where(taken_figures)))))
+
+        for move in available_moves:
+            if set(taken_figures) == set(move.taken_figures):
+                if self.__figure_type(self.__board[move.src]) == 0 and\
+                   self.__figure_type(new_board[move.dest]) == 1:
+                    move.promoted = True
+                return move
+
+        return None
 
     def oponent(self, player=None):
         if player is None:
@@ -419,3 +458,17 @@ class Move(object):
     @promoted.setter
     def promoted(self, value):
         self.__promoted = value
+
+    def __repr__(self):
+        return f'Move(chain={self.__chain}, taken={self.__taken_figures}, promoted={self.__promoted})'
+    
+    def __eq__(self, other):
+        if other == None:
+            return False
+        if not isinstance(other, Move):
+            return None
+        if self.__chain == other.chain and\
+           self.__taken_figures == other.taken_figures and\
+           self.__promoted == other.promoted:
+            return True
+        return False
