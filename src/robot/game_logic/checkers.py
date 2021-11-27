@@ -2,9 +2,6 @@ from os import stat
 import sys
 from typing import Tuple
 import numpy as np
-from pygame.constants import SRCALPHA
-
-sys.path.append('../../../../')
 
 class Checkers(object):
     def __init__(self, board=None):
@@ -147,6 +144,9 @@ class Checkers(object):
                     del moves[i]
         
         return moves
+    
+    def calc_move_between_boards(self, new_board):
+        pass
     
     def __is_step_valid(self, step_board, step_src, step_dest):
         # move from empty square

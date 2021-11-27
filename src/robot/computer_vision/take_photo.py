@@ -28,4 +28,4 @@ cv2.imwrite(f'imgs/img_{img_idx}.png', img)
 
 cam.stop()
 
-print('Photo saved to: imgs/img_{img_idx}.png')
+print(f'Photo saved to: imgs/img_{img_idx}.png')

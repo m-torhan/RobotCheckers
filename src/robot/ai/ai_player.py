@@ -3,7 +3,7 @@ import random
 import minimax
 import monte_carlo
 
-class AIPlayer(object):
+class __AIPlayer(object):
     def __init__(self, num):
         self.__num = num
 
@@ -14,16 +14,16 @@ class AIPlayer(object):
     def make_move(self, checkers):
         pass
 
-class AIPlayerRandom(AIPlayer):
+class AIPlayerRandom(__AIPlayer):
     def make_move(self, checkers):
         available_moves = checkers.calc_available_moves_for_player(self.num)
         move = random.choice(available_moves)
 
-        ret, _ = checkers.make_move(move)
+        ret, promoted = checkers.make_move(move)
         
-        return move, ret
+        return move, ret, promoted
 
-class AIPlayerMinimax(AIPlayer):
+class AIPlayerMinimax(__AIPlayer):
     def __init__(self, num, max_depth):
         super(AIPlayerMinimax, self).__init__(num)
         self.__max_depth = max_depth
@@ -31,11 +31,11 @@ class AIPlayerMinimax(AIPlayer):
     def make_move(self, checkers):
         move = minimax.get_best_move(checkers, self.__max_depth)
 
-        ret, _ = checkers.make_move(move)
+        ret, promoted = checkers.make_move(move)
         
-        return move, ret
+        return move, ret, promoted
         
-class AIPlayerMonteCarlo(AIPlayer):
+class AIPlayerMonteCarlo(__AIPlayer):
     def __init__(self, num, simulations):
         super(AIPlayerMonteCarlo, self).__init__(num)
         self.__simulations = simulations
@@ -43,6 +43,6 @@ class AIPlayerMonteCarlo(AIPlayer):
     def make_move(self, checkers):
         move = monte_carlo.get_best_move(checkers, self.__simulations)
         
-        ret, _ = checkers.make_move(move)
+        ret, promoted = checkers.make_move(move)
         
-        return move, ret
+        return move, ret, promoted
