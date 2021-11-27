@@ -66,13 +66,14 @@ def game():
         #player_2 = ai_player.AIPlayerMinimax(player_2_num, 2)
 
         while not checkers.end and run:
+            sleep(1)
             available_moves = checkers.calc_available_moves_for_player(checkers.player_turn)
-
+            sleep(.5)
             if checkers.player_turn == player_1.num:
-                move, ret = player_1.make_move(checkers)
+                _ = player_1.make_move(checkers)
 
             elif checkers.player_turn == player_2.num:
-                move, ret = player_2.make_move(checkers)
+                _ = player_2.make_move(checkers)
             
         if checkers.end:
             if checkers.winner == player_1_num:
@@ -150,9 +151,13 @@ while run:
                 pygame.draw.circle(window, col, (32*i + 16, 32*j + 16), 10, 0)
 
     if available_moves is not None:
-        for move in available_moves:
+        for j, move in enumerate(available_moves):
+            random.seed(j)
+            r = random.randint(0, 255)
+            g = random.randint(0, 255)
+            b = random.randint(0, 255)
             for i in range(len(move.chain) - 1):
-                pygame.draw.line(window, (0, 128, 128), np.array(move.chain[i])*32 + 16, np.array(move.chain[i + 1])*32 + 16, 8)
+                pygame.draw.line(window, (r, g, b), np.array(move.chain[i])*32 + 16, np.array(move.chain[i + 1])*32 + 16, 8)
 
     draw_text(f'{type(player_1).__name__} {type(player_2).__name__}', 16, (255,)*3, window, (384, 96))
     draw_text(f'{score}', 32, (255,)*3, window, (384, 128))
