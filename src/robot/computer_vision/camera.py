@@ -2,8 +2,9 @@ import os
 import numpy as np
 import cv2
 import threading
+import time
 
-import config
+import camera_config
 
 class CameraHandler(object):
     def __init__(self, debug=False):
@@ -17,11 +18,11 @@ class CameraHandler(object):
 
         # square size in pixels
         self.__sq_side = 64
-        sq_side_cm = config.board_size[0]//8
+        sq_side_cm = camera_config.board_size[0]//8
         px_per_cm = self.__sq_side//sq_side_cm
 
         # board borders in pixels
-        self.__x_min = px_per_cm*(config.gamearea_size[0] - config.board_size[0]) + self.__sq_side*3//2
+        self.__x_min = px_per_cm*(camera_config.gamearea_size[0] - camera_config.board_size[0]) + self.__sq_side*3//2
         self.__y_min = self.__sq_side*3//2
         xy_delta = self.__sq_side*6
         self.__x_max = self.__x_min + xy_delta
@@ -30,8 +31,8 @@ class CameraHandler(object):
         self.__bottom_right_corner = (self.__x_max + xy_delta//6, self.__y_max + xy_delta//6)
 
         # board size in pixels
-        self.__out_width = self.__sq_side*8*config.gamearea_size[0]//config.board_size[0] + self.__sq_side//2
-        self.__out_height = self.__sq_side*8*config.gamearea_size[1]//config.board_size[1] + self.__sq_side//2
+        self.__out_width = self.__sq_side*8*camera_config.gamearea_size[0]//camera_config.board_size[0] + self.__sq_side//2
+        self.__out_height = self.__sq_side*8*camera_config.gamearea_size[1]//camera_config.board_size[1] + self.__sq_side//2
     
     @property
     def initialized(self):
@@ -43,17 +44,18 @@ class CameraHandler(object):
         if self.__debug:
             vid_idx = 0
 
-            while os.path.isfile(f'vids/debug_vid_{vid_idx}.avi'):
+            while os.path.isfile(f'debug_vid_{vid_idx}.avi'):
                 vid_idx += 1
 
-            self.__debug_out = cv2.VideoWriter(f'vids/debug_vid_{vid_idx}.avi', cv2.VideoWriter_fourcc(*'XVID'), 2, (640, 480))
+            self.__debug_out = cv2.VideoWriter(f'debug_vid_{vid_idx}.avi', cv2.VideoWriter_fourcc(*'XVID'), 2, (640, 480))
         
     def stop(self):
+        if self.__debug:
+            print('Debug video saved.')
+            self.__debug_out.release()
+
         self.__run = False
         self.__cam_thread.join()
-
-        if self.__debug:
-            self.__debug_out.release()
         
         self.__cam.release()
 
@@ -71,14 +73,14 @@ class CameraHandler(object):
         board_code = np.zeros((8, 8), dtype=np.uint8)
         board_pos = np.zeros((8, 8, 2), dtype=np.float64)
 
-        free_pawns = {}
+        free_figures = {}
 
-        for color, code in config.pawns_colors_code.items():
-            free_pawns[color] = []
+        for color, code in camera_config.pawns_colors_code.items():
+            free_figures[color] = []
             for x, y in objects_positions[color]:
                 pawn_on_board = False
                 if -.5 < x < 7.5 and\
-                    -.5 < y < 7.5:
+                   -.5 < y < 7.5:
                     for i in range(max(0, int(x) - 1), min(8, int(x) + 2)):
                         for j in range(max(0, int(y) - 1), min(8, int(y) + 2)):
                             if (i + j) % 2 == 1:
@@ -93,9 +95,9 @@ class CameraHandler(object):
                                     board_pos[i, j, 1] = y
                                
                 if not pawn_on_board:
-                    free_pawns[color].append((x, y))
+                    free_figures[color].append((x, y))
 
-        return board_code, board_pos, free_pawns, len(objects_positions['hand']) > 0
+        return board_code, board_pos, free_figures, len(objects_positions['hand']) > 0
 
     def __detect_objects_positions(self):
         if self.__warpPerspectiveMatrix is None or self.__frame is None:
@@ -165,13 +167,13 @@ class CameraHandler(object):
                     if self.__debug:
                         cv2.rectangle(debug_img_rects, (x - 8, y - 8), (x + w + 8, y + h + 8), colors[col], 2)
         
-        if self.__debug:
+        if self.__debug and self.__debug_out.isOpened():
             debug_img_rects_unperp = cv2.warpPerspective(debug_img_rects, self.__warpPerspectiveMatrix, (640, 480), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP)
 
             frame_masked = frame.copy()
             frame_masked[cv2.cvtColor(debug_img_rects_unperp, cv2.COLOR_RGB2GRAY) > 0] = 0
 
-            self.__debug_out.write(debug_img_rects_unperp + frame_masked)
+            self.__debug_out.write(cv2.cvtColor(debug_img_rects_unperp + frame_masked, cv2.COLOR_RGB2BGR))
 
         return objects_positions
 
@@ -183,12 +185,17 @@ class CameraHandler(object):
             
             if not self.initialized:
                 self.__initialize()
+            
+            time.sleep(.05)
     
     def __initialize(self):
         if self.__frame is None:
             return None
 
         frame = self.__frame.copy()
+
+        if self.__debug and self.__debug_out.isOpened():
+            self.__debug_out.write(frame)
 
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)

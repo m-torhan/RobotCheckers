@@ -2,9 +2,6 @@ from os import stat
 import sys
 from typing import Tuple
 import numpy as np
-from pygame.constants import SRCALPHA
-
-sys.path.append('../../../../')
 
 class Checkers(object):
     def __init__(self, board=None):

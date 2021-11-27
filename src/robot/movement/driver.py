@@ -4,34 +4,34 @@ import threading
 import datetime
 import time
 
-import config
+import driver_config
 
 class MovementHandler(object):
     def __init__(self):
         GPIO.setmode(GPIO.BCM)
 
-        GPIO.setup(config.pin_endstop_X_min, GPIO.IN)
-        GPIO.setup(config.pin_endstop_X_max, GPIO.IN)
-        GPIO.setup(config.pin_endstop_Y_min, GPIO.IN)
-        GPIO.setup(config.pin_endstop_Y_max, GPIO.IN)
+        GPIO.setup(driver_config.pin_endstop_X_min, GPIO.IN)
+        GPIO.setup(driver_config.pin_endstop_X_max, GPIO.IN)
+        GPIO.setup(driver_config.pin_endstop_Y_min, GPIO.IN)
+        GPIO.setup(driver_config.pin_endstop_Y_max, GPIO.IN)
 
-        GPIO.setup(config.pin_motor_A_step, GPIO.OUT)
-        GPIO.setup(config.pin_motor_A_dir, GPIO.OUT)
-        GPIO.setup(config.pin_motor_B_step, GPIO.OUT)
-        GPIO.setup(config.pin_motor_B_dir, GPIO.OUT)
+        GPIO.setup(driver_config.pin_motor_A_step, GPIO.OUT)
+        GPIO.setup(driver_config.pin_motor_A_dir, GPIO.OUT)
+        GPIO.setup(driver_config.pin_motor_B_step, GPIO.OUT)
+        GPIO.setup(driver_config.pin_motor_B_dir, GPIO.OUT)
         
-        GPIO.output(config.pin_motor_A_step, GPIO.LOW)
-        GPIO.output(config.pin_motor_A_dir, GPIO.LOW)
-        GPIO.output(config.pin_motor_B_step, GPIO.LOW)
-        GPIO.output(config.pin_motor_B_dir, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_A_step, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_A_dir, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_B_step, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_B_dir, GPIO.LOW)
 
-        GPIO.setup(config.pin_magnet, GPIO.OUT)
+        GPIO.setup(driver_config.pin_magnet, GPIO.OUT)
         
-        GPIO.output(config.pin_magnet, GPIO.LOW)
+        GPIO.output(driver_config.pin_magnet, GPIO.LOW)
 
-        GPIO.setup(config.pin_servo, GPIO.OUT)
+        GPIO.setup(driver_config.pin_servo, GPIO.OUT)
         
-        self.__servo_pwm = GPIO.PWM(config.pin_servo, 50)
+        self.__servo_pwm = GPIO.PWM(driver_config.pin_servo, driver_config.servo_rate)
         self.__servo_pwm.start(0)
 
         self.__pos = [0, 0]
@@ -41,20 +41,23 @@ class MovementHandler(object):
         self.__run = True
         self.__instr_list = []
         self.__instr_handler_thread = threading.Thread(target=self.__instr_handler)
-        self.__speed = config.max_speed
+        self.__speed = driver_config.max_speed
         self.__all_done = True
 
     @property
     def pos(self):
-        return (self.__pos[0]/config.steps_per_cm, self.__pos[1]/config.steps_per_cm)
+        return (self.__pos[0]/driver_config.steps_per_cm - driver_config.board_pos['x'][0],
+                self.__pos[1]/driver_config.steps_per_cm - driver_config.board_pos['y'][0])
 
     @property
     def X_range(self):
-        return (self.__X_range[0]/config.steps_per_cm, self.__X_range[1]/config.steps_per_cm)
+        return (self.__X_range[0]/driver_config.steps_per_cm - driver_config.board_pos['x'][0],
+                self.__X_range[1]/driver_config.steps_per_cm - driver_config.board_pos['x'][0])
 
     @property
     def Y_range(self):
-        return (self.__Y_range[0]/config.steps_per_cm, self.__Y_range[1]/config.steps_per_cm)
+        return (self.__Y_range[0]/driver_config.steps_per_cm - driver_config.board_pos['y'][0],
+                self.__Y_range[1]/driver_config.steps_per_cm -  - driver_config.board_pos['y'][0])
     
     @property
     def calibrated(self):
@@ -79,14 +82,14 @@ class MovementHandler(object):
     def endstop_state(self, axis, end):
         if axis == 'X':
             if end == 0:
-                return GPIO.input(config.pin_endstop_X_min)
+                return GPIO.input(driver_config.pin_endstop_X_min)
             if end == 1:
-                return GPIO.input(config.pin_endstop_X_max)
+                return GPIO.input(driver_config.pin_endstop_X_max)
         if axis == 'Y':
             if end == 0:
-                return GPIO.input(config.pin_endstop_Y_min)
+                return GPIO.input(driver_config.pin_endstop_Y_min)
             if end == 1:
-                return GPIO.input(config.pin_endstop_Y_max)
+                return GPIO.input(driver_config.pin_endstop_Y_max)
 
     def step_X_forward(self):
         self.__instr_list.append(f'sxf')
@@ -192,62 +195,64 @@ class MovementHandler(object):
             
             else:
                 self.__all_done = True
+            
+            time.sleep(.1)
 
     def __step_X_forward_inner(self):
         if self.__pos[0] >= self.__X_range[1]:
             return
-        GPIO.output(config.pin_motor_A_dir, GPIO.HIGH)
-        GPIO.output(config.pin_motor_B_dir, GPIO.HIGH)
-        GPIO.output(config.pin_motor_A_step, GPIO.HIGH)
-        GPIO.output(config.pin_motor_B_step, GPIO.HIGH)
+        GPIO.output(driver_config.pin_motor_A_dir, GPIO.HIGH)
+        GPIO.output(driver_config.pin_motor_B_dir, GPIO.HIGH)
+        GPIO.output(driver_config.pin_motor_A_step, GPIO.HIGH)
+        GPIO.output(driver_config.pin_motor_B_step, GPIO.HIGH)
         time.sleep(1./self.__speed)
-        GPIO.output(config.pin_motor_A_step, GPIO.LOW)
-        GPIO.output(config.pin_motor_B_step, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_A_step, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_B_step, GPIO.LOW)
         time.sleep(1./self.__speed)
         self.__pos[0] += 1
 
     def __step_X_backward_inner(self):
         if self.__pos[0] <= self.__X_range[0]:
             return
-        GPIO.output(config.pin_motor_A_dir, GPIO.LOW)
-        GPIO.output(config.pin_motor_B_dir, GPIO.LOW)
-        GPIO.output(config.pin_motor_A_step, GPIO.HIGH)
-        GPIO.output(config.pin_motor_B_step, GPIO.HIGH)
+        GPIO.output(driver_config.pin_motor_A_dir, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_B_dir, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_A_step, GPIO.HIGH)
+        GPIO.output(driver_config.pin_motor_B_step, GPIO.HIGH)
         time.sleep(1./self.__speed)
-        GPIO.output(config.pin_motor_A_step, GPIO.LOW)
-        GPIO.output(config.pin_motor_B_step, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_A_step, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_B_step, GPIO.LOW)
         time.sleep(1./self.__speed)
         self.__pos[0] -= 1
     
     def __step_Y_forward_inner(self):
         if self.__pos[1] >= self.__Y_range[1]:
             return
-        GPIO.output(config.pin_motor_A_dir, GPIO.LOW)
-        GPIO.output(config.pin_motor_B_dir, GPIO.HIGH)
-        GPIO.output(config.pin_motor_A_step, GPIO.HIGH)
-        GPIO.output(config.pin_motor_B_step, GPIO.HIGH)
+        GPIO.output(driver_config.pin_motor_A_dir, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_B_dir, GPIO.HIGH)
+        GPIO.output(driver_config.pin_motor_A_step, GPIO.HIGH)
+        GPIO.output(driver_config.pin_motor_B_step, GPIO.HIGH)
         time.sleep(1./self.__speed)
-        GPIO.output(config.pin_motor_A_step, GPIO.LOW)
-        GPIO.output(config.pin_motor_B_step, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_A_step, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_B_step, GPIO.LOW)
         time.sleep(1./self.__speed)
         self.__pos[1] += 1
 
     def __step_Y_backward_inner(self):
         if self.__pos[1] <= self.__Y_range[0]:
             return
-        GPIO.output(config.pin_motor_A_dir, GPIO.HIGH)
-        GPIO.output(config.pin_motor_B_dir, GPIO.LOW)
-        GPIO.output(config.pin_motor_A_step, GPIO.HIGH)
-        GPIO.output(config.pin_motor_B_step, GPIO.HIGH)
+        GPIO.output(driver_config.pin_motor_A_dir, GPIO.HIGH)
+        GPIO.output(driver_config.pin_motor_B_dir, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_A_step, GPIO.HIGH)
+        GPIO.output(driver_config.pin_motor_B_step, GPIO.HIGH)
         time.sleep(1./self.__speed)
-        GPIO.output(config.pin_motor_A_step, GPIO.LOW)
-        GPIO.output(config.pin_motor_B_step, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_A_step, GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_B_step, GPIO.LOW)
         time.sleep(1./self.__speed)
         self.__pos[1] -= 1
 
     def __move_to_pos_inner(self, x, y):
-        step_x = int(x*config.steps_per_cm)
-        step_y = int(y*config.steps_per_cm)
+        step_x = int((x + driver_config.board_pos['x'][0])*driver_config.steps_per_cm)
+        step_y = int((y + driver_config.board_pos['y'][0])*driver_config.steps_per_cm)
 
         if step_x < self.__X_range[0]:
             step_x = self.__X_range[0]
@@ -265,8 +270,8 @@ class MovementHandler(object):
         delta_a = delta_x - delta_y
         delta_b = delta_x + delta_y
 
-        GPIO.output(config.pin_motor_A_dir, GPIO.HIGH if delta_a > 0 else GPIO.LOW)
-        GPIO.output(config.pin_motor_B_dir, GPIO.HIGH if delta_b > 0 else GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_A_dir, GPIO.HIGH if delta_a > 0 else GPIO.LOW)
+        GPIO.output(driver_config.pin_motor_B_dir, GPIO.HIGH if delta_b > 0 else GPIO.LOW)
 
         delta_a = abs(delta_a)
         delta_b = abs(delta_b)
@@ -278,8 +283,8 @@ class MovementHandler(object):
                 GPIO.output(motor_pin, GPIO.LOW)
                 time.sleep(1./speed)
         
-        thread_a = threading.Thread(target=__move_motor, args=(config.pin_motor_A_step, delta_a, self.__speed))
-        thread_b = threading.Thread(target=__move_motor, args=(config.pin_motor_B_step, delta_b, self.__speed))
+        thread_a = threading.Thread(target=__move_motor, args=(driver_config.pin_motor_A_step, delta_a, self.__speed))
+        thread_b = threading.Thread(target=__move_motor, args=(driver_config.pin_motor_B_step, delta_b, self.__speed))
 
         thread_a.start()
         thread_b.start()
@@ -297,65 +302,65 @@ class MovementHandler(object):
         if col < 0 or col > 7:
             raise Exception(f'Wrong column: {col}')
 
-        x_m = col/7
-        y_m = row/7
+        x_m = col/8
+        y_m = row/8
 
-        x = (1 - x_m)*config.board_pos['x'][0] + x_m*config.board_pos['x'][1]
-        y = (1 - y_m)*config.board_pos['y'][0] + y_m*config.board_pos['y'][1]
+        x = driver_config.square_size/2 +\
+            x_m*(driver_config.board_pos['x'][1] - driver_config.board_pos['x'][0])
+        y = driver_config.square_size/2 +\
+            y_m*(driver_config.board_pos['y'][1] - driver_config.board_pos['y'][0])
 
         self.__move_to_pos_inner(x, y)
     
     def __set_magnet_inner(self, state):
-        GPIO.output(config.pin_magnet, GPIO.HIGH if state else GPIO.LOW)
+        GPIO.output(driver_config.pin_magnet, GPIO.HIGH if state else GPIO.LOW)
 
     def __set_servo_inner(self, value):
         self.__servo_pwm.ChangeDutyCycle(value)
 
     def __put_pawn_inner(self):
-        self.__set_servo_inner(2)
+        self.__set_servo_inner(driver_config.servo_down)
         time.sleep(1.2)
         self.__set_magnet_inner(0)
         time.sleep(.5)
-        self.__set_servo_inner(12)
-        time.sleep(1.2)
-        # self.__set_servo_inner(0)
+        self.__set_servo_inner(driver_config.servo_up)
+        time.sleep(2.4)
 
     def __take_pawn_inner(self):
-        self.__set_servo_inner(2)
+        self.__set_servo_inner(driver_config.servo_down)
         time.sleep(1.2)
         self.__set_magnet_inner(1)
         time.sleep(.5)
-        self.__set_servo_inner(12)
-        time.sleep(1.2)
-        # self.__set_servo_inner(0)
+        self.__set_servo_inner(driver_config.servo_up)
+        time.sleep(2.4)
 
     def __calibrate_inner(self):
         self.__X_range = [-float('inf'), float('inf')]
         # calibrate X max
-        self.__speed = config.max_speed
-        while not GPIO.input(config.pin_endstop_X_max):
+        self.__speed = driver_config.max_speed
+        while not GPIO.input(driver_config.pin_endstop_X_max):
             self.__step_X_forward_inner()
         
-        for _ in range(config.steps_per_cm):
+        for _ in range(driver_config.steps_per_cm):
             self.__step_X_backward_inner()
             
-        self.__speed = config.max_speed/8
-        while not GPIO.input(config.pin_endstop_X_max):
+        self.__speed = driver_config.max_speed/8
+        while not GPIO.input(driver_config.pin_endstop_X_max):
             self.__step_X_forward_inner()
          
         # calibrate X min
         X_range = 0
-        self.__speed = config.max_speed
-        while not GPIO.input(config.pin_endstop_X_min):
+        self.__speed = driver_config.max_speed
+        while not GPIO.input(driver_config.pin_endstop_X_min):
             self.__step_X_backward_inner()
             X_range += 1
         
-        for _ in range(config.steps_per_cm):
+        for _ in range(driver_config.steps_per_cm):
             self.__step_X_forward_inner()
             X_range -= 1
         
-        self.__speed = config.max_speed/8
-        while not GPIO.input(config.pin_endstop_X_min):
+        self.__speed = driver_config.max_speed/8
+        while not GPIO.input(driver_config.pin_endstop_X_min):
             self.__step_X_backward_inner()
             X_range += 1
 
@@ -364,69 +369,71 @@ class MovementHandler(object):
 
         self.__Y_range = [-float('inf'), float('inf')]
         # calibrate Y max
-        self.__speed = config.max_speed
-        while not GPIO.input(config.pin_endstop_Y_max):
+        self.__speed = driver_config.max_speed
+        while not GPIO.input(driver_config.pin_endstop_Y_max):
             self.__step_Y_forward_inner()
 
-        for _ in range(config.steps_per_cm):
+        for _ in range(driver_config.steps_per_cm):
             self.__step_Y_backward_inner()
             
-        self.__speed = config.max_speed/8
-        while not GPIO.input(config.pin_endstop_Y_max):
+        self.__speed = driver_config.max_speed/8
+        while not GPIO.input(driver_config.pin_endstop_Y_max):
             self.__step_Y_forward_inner()
 
         # calibrate Y min
         Y_range = 0
-        self.__speed = config.max_speed
-        while not GPIO.input(config.pin_endstop_Y_min):
+        self.__speed = driver_config.max_speed
+        while not GPIO.input(driver_config.pin_endstop_Y_min):
             self.__step_Y_backward_inner()
             Y_range += 1
         
-        for _ in range(config.steps_per_cm):
+        for _ in range(driver_config.steps_per_cm):
             self.__step_Y_forward_inner()
             Y_range -= 1
             
-        self.__speed = config.max_speed/8
-        while not GPIO.input(config.pin_endstop_Y_min):
+        self.__speed = driver_config.max_speed/8
+        while not GPIO.input(driver_config.pin_endstop_Y_min):
             self.__step_Y_backward_inner()
             Y_range += 1
 
         self.__pos[1] = 0
         self.__Y_range = [0, Y_range]
 
-        self.__speed = config.max_speed
+        self.__speed = driver_config.max_speed
+        
+        self.__calibrated = True
 
     def __move_pawn_from_square_to_square_inner(self, from_col, from_row, to_col, to_row):
-        self.__set_servo_inner(12)
+        self.__set_servo_inner(driver_config.servo_up)
         self.__move_to_square_inner(from_col, from_row)
         self.__take_pawn_inner()
         self.__move_to_square_inner(to_col, to_row)
         self.__put_pawn_inner()
-        self.__set_servo_inner(12)
+        self.__set_servo_inner(driver_config.servo_up)
     
     def __move_pawn_from_square_to_pos_inner(self, from_col, from_row, to_x, to_y):
-        self.__set_servo_inner(12)
+        self.__set_servo_inner(driver_config.servo_up)
         self.__move_to_square_inner(from_col, from_row)
         self.__take_pawn_inner()
         self.__move_to_pos_inner(to_x, to_y)
         self.__put_pawn_inner()
-        self.__set_servo_inner(12)
+        self.__set_servo_inner(driver_config.servo_up)
     
     def __move_pawn_from_pos_to_square_inner(self, from_x, from_y, to_col, to_row):
-        self.__set_servo_inner(12)
+        self.__set_servo_inner(driver_config.servo_up)
         self.__move_to_pos_inner(from_x, from_y)
         self.__take_pawn_inner()
         self.__move_to_square_inner(to_col, to_row)
         self.__put_pawn_inner()
-        self.__set_servo_inner(12)
+        self.__set_servo_inner(driver_config.servo_up)
     
     def __move_pawn_from_pos_to_pos_inner(self, from_x, from_y, to_x, to_y):
-        self.__set_servo_inner(12)
+        self.__set_servo_inner(driver_config.servo_up)
         self.__move_to_pos_inner(from_x, from_y)
         self.__take_pawn_inner()
         self.__move_to_pos_inner(to_x, to_y)
         self.__put_pawn_inner()
-        self.__set_servo_inner(12)
+        self.__set_servo_inner(driver_config.servo_up)
 
     def __log(self, log):
         with open('logs/movement_handler.txt', 'a') as log_file:

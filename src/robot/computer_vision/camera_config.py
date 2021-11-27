@@ -7,3 +7,10 @@ pawns_colors_code = {
     'black': 3,
     'red'  : 4
 }
+
+pawns_code_colors = {
+    1: 'white',
+    2: 'blue',
+    3: 'black',
+    4: 'red'
+}
