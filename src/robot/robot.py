@@ -44,7 +44,7 @@ class RobotCheckers(object):
         return self.__camera_handler.initialized
     
     @property
-    def board_from_chekcers(self):
+    def board_from_checkers(self):
         if self.__checkers is None or self.__ai_player is None:
             return None
 
@@ -57,12 +57,6 @@ class RobotCheckers(object):
     @property
     def board_from_camera(self):
         return self.__camera_handler.read_board()[0]
-    
-    @property
-    def board_from_checkers(self):
-        if self.__checkers is not None:
-            return self.__checkers.board
-        return None
     
     @property
     def all_moves(self):

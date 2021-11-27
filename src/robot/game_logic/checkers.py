@@ -79,7 +79,7 @@ class Checkers(object):
 
         if len(self.calc_available_moves_for_player(self.__player_turn)) == 0:
             self.__end = True
-            self.__winner = self.oponent()
+            self.__winner = self.opponent()
 
         if min(self.__no_taking_queen_moves) > 15:
             self.__end = True
@@ -121,7 +121,7 @@ class Checkers(object):
             step_src = step_dest
 
         # check if regular move was made while there was
-        # available move wtih oponent figures taking
+        # available move with opponent figures taking
         if len(taken_figures) == 0:
             for move in self.calc_available_moves_for_player(self.__player_turn):
                 if len(move.taken_figures) > 0:
@@ -141,36 +141,36 @@ class Checkers(object):
             for j in range(self.board.shape[1]):
                 if self.__board[i, j] in pawns:
                     moves.extend(self.__calc_available_moves((i, j)))
-        
+
         has_taking_move = False
         for move in moves:
             if len(move.taken_figures) > 0:
                 has_taking_move = True
                 break
-        
+
         if has_taking_move:
             for i in range(len(moves))[::-1]:
                 if len(moves[i].taken_figures) == 0:
                     del moves[i]
-        
+
         return moves
-    
+
     def calc_move_between_boards(self, new_board):
         curr_board_player_figures = self.__figure_player(self.__board) == self.__player_turn
         new_board_player_figures = self.__figure_player(new_board) == self.__player_turn
-        curr_board_oponent_figures = self.__figure_player(self.__board) == self.oponent()
-        new_board_oponent_figures = self.__figure_player(new_board) == self.oponent()
+        curr_board_opponent_figures = self.__figure_player(self.__board) == self.opponent()
+        new_board_opponent_figures = self.__figure_player(new_board) == self.opponent()
 
         moved_figures_src = (curr_board_player_figures == True) & (new_board_player_figures == False)
 
         if np.sum(moved_figures_src) != 1:
             return None
-        
+
         moved_figures_dest = (curr_board_player_figures == False) & (new_board_player_figures == True)
 
         if np.sum(moved_figures_dest) != 1:
             return None
-        
+
         moved_figure_src = np.where(moved_figures_src)
         moved_figure_src = (moved_figure_src[0][0], moved_figure_src[1][0])
 
@@ -180,12 +180,12 @@ class Checkers(object):
         available_moves = self.__calc_available_moves(moved_figure_src)
         available_moves = list(filter(lambda move: move.dest == moved_figure_dest, available_moves))
 
-        taken_figures = (curr_board_oponent_figures == True) & (new_board_oponent_figures == False)
-        placed_oponent_figures = (curr_board_oponent_figures == False) & (new_board_oponent_figures == True)
+        taken_figures = (curr_board_opponent_figures == True) & (new_board_opponent_figures == False)
+        placed_opponent_figures = (curr_board_opponent_figures == False) & (new_board_opponent_figures == True)
 
-        if np.sum(placed_oponent_figures) > 0:
+        if np.sum(placed_opponent_figures) > 0:
             return None
-        
+
         taken_figures = list(zip(*list(map(list, np.where(taken_figures)))))
 
         for move in available_moves:
@@ -197,11 +197,11 @@ class Checkers(object):
 
         return None
 
-    def oponent(self, player=None):
+    def opponent(self, player=None):
         if player is None:
             return 1 - self.__player_turn
         return 1 - player
-    
+
     def __is_step_valid(self, step_board, step_src, step_dest):
         # move from empty square
         if step_board[step_src] == 0:
@@ -210,11 +210,11 @@ class Checkers(object):
         # moving not current turn players figure
         if self.__figure_player(step_board[step_src]) != self.__player_turn:
             return False
-        
+
         # there is figure on dest square
         if step_board[step_dest] != 0:
             return False
-        
+
         # pawn
         if self.__figure_type(step_board[step_src]) == 0:
             if abs(step_dest[0] - step_src[0]) == 1 and abs(step_dest[1] - step_src[1]) == 1:
@@ -223,25 +223,25 @@ class Checkers(object):
 
             y_dir = (1, -1)[self.__player_turn]
             if abs(step_dest[0] - step_src[0]) == 2 and step_dest[1] - step_src[1] == 2*y_dir and\
-               self.__figure_player(step_board[(step_src[0] + step_dest[0])//2, (step_src[1] + step_dest[1])//2]) == self.oponent():
+               self.__figure_player(step_board[(step_src[0] + step_dest[0])//2, (step_src[1] + step_dest[1])//2]) == self.opponent():
                 # taking move
                 return True
-        
+
         #queen
         if self.__figure_type(step_board[step_src]) == 1:
             if abs(step_dest[0] - step_src[0]) == abs(step_dest[1] - step_src[1]):
                 return True
-        
+
         return False
-    
+
     def __step_taken_figures(self, step_board, step_src, step_dest):
         # pawn
         if self.__figure_type(step_board[step_src]) == 0:
             if abs(step_src[0] - step_dest[0]) == 2 and abs(step_src[1] - step_dest[1]) == 2 and\
-               self.__figure_player(step_board[(step_src[0] + step_dest[0])//2, (step_src[1] + step_dest[1])//2]) == self.oponent():
+               self.__figure_player(step_board[(step_src[0] + step_dest[0])//2, (step_src[1] + step_dest[1])//2]) == self.opponent():
                 # taking move
                 return [((step_src[0] + step_dest[0])//2, (step_src[1] + step_dest[1])//2)]
-        
+
         #queen
         if self.__figure_type(step_board[step_src]) == 1:
             if abs(step_src[0] - step_dest[0]) == abs(step_src[1] - step_dest[1]):
@@ -253,15 +253,15 @@ class Checkers(object):
                 for i in range(fields_between):
                     pos = (step_src[0] + (i + 1)*x_dir,
                            step_src[1] + (i + 1)*y_dir)
-                    if self.__figure_player(step_board[pos]) == self.oponent():
+                    if self.__figure_player(step_board[pos]) == self.opponent():
                         pawns.append(pos)
 
                 return pawns
-        
+
         return None
 
     def __next_player(self):
-        self.__player_turn = self.oponent()
+        self.__player_turn = self.opponent()
         self.__turn_counter += 1
 
     def __calc_available_moves(self, figure_pos):
@@ -280,7 +280,7 @@ class Checkers(object):
         y_dir = (1, -1)[player]
 
         available_moves = []
-        
+
         # taking moves
         def dfs(board, chain, taken_figures):
             pos = chain[-1]
@@ -292,7 +292,7 @@ class Checkers(object):
                 if 0 <= new_pos[0] <= 7 and\
                    0 <= new_pos[1] <= 7 and\
                    self.__board[new_pos] == 0 and\
-                   self.__figure_player(self.__board[taking_pos]) == self.oponent(player):
+                   self.__figure_player(self.__board[taking_pos]) == self.opponent(player):
                     next_taking_possible = True
 
                     new_board = board.copy()
@@ -321,7 +321,7 @@ class Checkers(object):
                 0 <= new_pos[1] <= 7 and\
                 self.__board[new_pos] == 0:
                     available_moves.append(Move((figure_pos, new_pos), []))
-                    
+
         return available_moves
 
     def __calc_available_moves_queen(self, figure_pos):
@@ -330,12 +330,12 @@ class Checkers(object):
         x, y = figure_pos
 
         available_moves = []
-        
+
         # taking moves
         def dfs(board, chain, taken_figures):
             pos = chain[-1]
             x, y = pos
-            
+
             next_taking_possible = False
             for y_dir in [-1, 1]:
                 for x_dir in [-1, 1]:
@@ -350,7 +350,7 @@ class Checkers(object):
 
                     if 0 <= new_x <= 7 and\
                        0 <= new_y <= 7 and\
-                       self.__figure_player(board[(new_x, new_y)]) == self.oponent(player):
+                       self.__figure_player(board[(new_x, new_y)]) == self.opponent(player):
                         taking_pos = (new_x, new_y)
                         new_x += x_dir
                         new_y += y_dir
@@ -369,12 +369,12 @@ class Checkers(object):
 
                             new_taken_figures = taken_figures.copy()
                             new_taken_figures.append(taking_pos)
-                            
+
                             dfs(new_board, new_chain, new_taken_figures)
 
                             new_x = new_x + x_dir
                             new_y = new_y + y_dir
-            
+
             if not next_taking_possible and len(chain) > 1:
                 available_moves.append(Move(chain, taken_figures))
 
@@ -394,7 +394,7 @@ class Checkers(object):
                         new_y += y_dir
 
         return available_moves
-    
+
     @staticmethod
     def __apply_step_to_board(board, step_src, step_dest):
         board[step_dest] = board[step_src]
@@ -407,7 +407,7 @@ class Checkers(object):
                 x = step_src[0] + i*x_dir
                 y = step_src[1] + i*y_dir
                 board[x, y] = 0
-        
+
         return board
 
     @staticmethod
@@ -431,19 +431,19 @@ class Move(object):
         self.__chain = chain
         self.__taken_figures = taken_figures
         self.__promoted = False
-    
+
     @property
     def src(self):
         return self.__chain[0]
-        
+
     @property
     def dest(self):
         return self.__chain[-1]
-        
+
     @property
     def chain(self):
         return self.__chain
-        
+
     @property
     def taken_figures(self):
         return self.__taken_figures
@@ -451,16 +451,16 @@ class Move(object):
     @property
     def promoted(self):
         return self.__promoted
-    
+
     @promoted.setter
     def promoted(self, value):
         self.__promoted = value
 
     def __repr__(self):
         return f'Move(chain={self.__chain}, taken={self.__taken_figures}, promoted={self.__promoted})'
-    
+
     def __eq__(self, other):
-        if other == None:
+        if other is None:
             return False
         if not isinstance(other, Move):
             return None
