@@ -28,7 +28,7 @@ class GameConsumer(WebsocketConsumer):
                             GameStatus.BOARD_PREPARATION_ENDED,
                             GameStatus.READY_TO_PLAY]:
 
-            self.group_send_game_status(game_status)
+            self.group_send_game_status(game_status, game_status.name)
             time.sleep(1)
 
         PLAYER_STARTS_BOARD = "33333333333300000000111111111111"
@@ -36,11 +36,11 @@ class GameConsumer(WebsocketConsumer):
 
         # inicjalne wysłanie planszy
         move = {
-                "id": -1,
-                "new_board_status" : ROBOT_STARTS_BOARD,
-                "move_steps": [],
-                "taken_pawns": []
-            }
+            "id": -1,
+            "new_board_status": ROBOT_STARTS_BOARD,
+            "move_steps": [],
+            "taken_pawns": []
+        }
         self.group_send_move(move)
         time.sleep(1)
 
@@ -49,17 +49,16 @@ class GameConsumer(WebsocketConsumer):
             "1111"+"1111"+"0111"+"1000"+"3000"+"0333"+"3333"+"3333",
             "1111"+"1111"+"0011"+"1100"+"3000"+"0333"+"3333"+"3333",
             "1111"+"1111"+"0311"+"1000"+"0000"+"0333"+"3333"+"3333",
-            ]
+        ]
 
         moves = [
             [{"x": 1, "y": 2}, {"x": 0, "y": 3}],
             [{"x": 0, "y": 5}, {"x": 1, "y": 4}],
             [{"x": 3, "y": 2}, {"x": 2, "y": 3}],
             [{"x": 1, "y": 4}, {"x": 3, "y": 2}],
-            ]
+        ]
 
-        taken_pawns = [[],[],[],[{"x": 2, "y": 3}]]
-
+        taken_pawns = [[], [], [], [{"x": 2, "y": 3}]]
 
         move_ctr = 0
         while not end:
@@ -68,7 +67,7 @@ class GameConsumer(WebsocketConsumer):
             time.sleep(0.5)
             move = {
                 "id": move_ctr,
-                "new_board_status" : board_statuses[move_ctr],
+                "new_board_status": board_statuses[move_ctr],
                 "move_steps": moves[move_ctr],
                 "taken_pawns": taken_pawns[move_ctr]
             }
@@ -96,15 +95,16 @@ class GameConsumer(WebsocketConsumer):
 
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json['message']
+        self.group_send_message(text_data_json)
 
-        self.group_send_message(message)
-
-    def group_send_game_status(self, status: GameStatus):
+    def group_send_game_status(self, status: GameStatus, content: str = ''):
         self.group_send_message(
             {
                 'type': 'game_status',
-                'message': {'game_status': status.name}
+                'message': {
+                    'game_status': status.name,
+                    'content': content
+                }
             }
         )
 
@@ -142,6 +142,11 @@ class GameConsumer(WebsocketConsumer):
         message_type = event['type']
         message_content = event['message']
         self.send_message(message_type, message_content)
+
+    # Receive message from group
+    def user_action(self, event):
+        message_content = event['message']['content']
+        # self._game.user_action(message_content)
 
     def send_message(self, message_type, message_content):
         # Send message to WebSocket
