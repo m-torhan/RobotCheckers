@@ -20,12 +20,11 @@ from movement.driver import MovementHandler, driver_config
 class RobotCheckers(object):
     def __init__(self):
         self.__movement_handler = MovementHandler()
-        self.__camera_handler = CameraHandler()
+        self.__camera_handler = CameraHandler(True)
         self.__robot_thread = threading.Thread(target=self.__robot_handler)
 
         self.__checkers = None
         self.__ai_player = None
-        self.__ai_player_2 = None
         self.__play = False
 
         self.__player_move_valid = True
@@ -130,10 +129,8 @@ class RobotCheckers(object):
             # Alpha-beta with depth of 5, 6, 7
             self.__ai_player = AIPlayerMinimax(robot_color, difficulty - 3)
 
-        self.__ai_player_2 = AIPlayerRandom(1 - robot_color)
-        
         # board preparation
-        #self.__prepare_board()
+        self.__prepare_board()
     
     def start_game(self):
         if self.__checkers is not None:
@@ -159,34 +156,38 @@ class RobotCheckers(object):
                 if self.__checkers.player_turn == self.__ai_player.num:
                     robot_move, _, promoted = self.__ai_player.make_move(self.__checkers)
                     self.__make_move(robot_move, promoted)
-                elif self.__checkers.player_turn == self.__ai_player_2.num:
-                    robot_move, _, promoted = self.__ai_player_2.make_move(self.__checkers)
-                    self.__make_move(robot_move, promoted)
                 else:
                     player_move = self.__get_player_move()
-                    
+
                     if player_move is not None and self.__checkers.is_move_valid(player_move):
                         self.__player_move_valid = True
                         self.__checkers.make_move(player_move)
 
                     else:
                         self.__player_move_valid = False
+            
+            self.__play = False
 
     def __get_player_move(self):
         timer = None
+        board_code = None
+
         while self.__run:
             board_code, _, _, hand_above_board = self.__camera_handler.read_board()
 
             if not hand_above_board:
                 if timer is None:
                     timer = time.perf_counter()
-                elif time.perf_counter() - timer > 5:
+                elif time.perf_counter() - timer > 1:
                     break
 
             else:
                 timer = None
                 
             time.sleep(.1)
+        
+        if board_code is None:
+            return None
 
         return self.__checkers.calc_move_between_boards(board_code)
 
