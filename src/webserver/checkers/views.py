@@ -8,8 +8,8 @@ from channels.layers import get_channel_layer
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
-from checkers.common.consts import GROUP_NAME
-from checkers.serializers import GameSettingsSerializer
+from webserver.checkers.common.consts import GROUP_NAME
+from webserver.checkers.serializers import GameSettingsSerializer
 
 settings_thread = None
 
@@ -36,9 +36,7 @@ def settings(request):
     if not serializer.is_valid():
         return redirect_params('index', {'status': 'settings-validation-failed'})
 
-
     if settings_thread is not None and settings_thread.is_alive():
-
         return redirect_params('index', {'status': 'settings-already-set'})
 
     settings_thread = threading.Thread(target=channel_send_settings, args=(serializer.validated_data,),
