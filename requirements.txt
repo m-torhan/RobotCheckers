@@ -1,0 +1,6 @@
+opencv-python
+numpy
+django
+djangorestframework
+channels
+asgiref
