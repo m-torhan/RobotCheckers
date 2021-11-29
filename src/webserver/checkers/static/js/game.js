@@ -21,7 +21,7 @@ webSocket.onmessage = function (e) {
     switch (message_type) {
         case 'game_status':
             updateWhosTurn(data.message.game_status);
-            gameStatusHandler(data.message.game_status);
+            gameStatusHandler(data.message.content);
             addToast(data.message.content)
             break;
         case 'move':
@@ -44,7 +44,9 @@ webSocket.onclose = function (e) {
 
 
 function gameStatusHandler(status) {
-
+    if(status!==''){
+        document.getElementsByClassName("last-status")[0].children[0].innerText = status;
+    }
 }
 
 function initBoard() {
@@ -110,50 +112,52 @@ function sleep(ms) {
 
 async function movePawn(move_list, output_board, taken_pawns) {
     let x = 0, y = 0;
+    let firstMove = document.getElementsByClassName('pawn').length === 0;
 
-    // make moves
-    for (let i = 0; i < move_list.length - 1; i++) {
-        x += move_list[i + 1]["x"] - move_list[i]["x"];
-        y += move_list[i + 1]["y"] - move_list[i]["y"];
+    if(!firstMove){
+        // make moves
+        for (let i = 0; i < move_list.length - 1; i++) {
+            x += move_list[i + 1]["x"] - move_list[i]["x"];
+            y += move_list[i + 1]["y"] - move_list[i]["y"];
 
-        document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0].classList.add("animate-move");
-        document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0].style.transform =
-            "translate(" + (x) * 125 + "%," + (y) * 125 + "%)";
+            document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0].classList.add("animate-move");
+            document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0].style.transform =
+                "translate(" + (x) * 125 + "%," + (y) * 125 + "%)";
 
-        addEventToRegister(`${sessionStorage.getItem('whoMoves')} wykonał ruch z pola (${move_list[i]["x"]},${move_list[i]["y"]}) do (${move_list[i + 1]["x"]},${move_list[i + 1]["y"]})`);
+            addEventToRegister(`${sessionStorage.getItem('whoMoves')} wykonał ruch z pola (${move_list[i]["x"]},${move_list[i]["y"]}) do (${move_list[i + 1]["x"]},${move_list[i + 1]["y"]})`);
 
+            await sleep(1000);
+        }
+
+        // promote pawns
+        if (move_list.length !== 0 && (move_list[move_list.length - 1]['y'] === 0 || move_list[move_list.length - 1]['y'] === 7)) {
+            const pawn = document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0];
+            if (pawn.classList.contains('white')) {
+                pawn.classList.remove('white');
+                pawn.classList.add('promotion')
+                pawn.classList.add('blue');
+            }
+            if (pawn.classList.contains('black')) {
+                pawn.classList.remove('black');
+                pawn.classList.add('promotion');
+                pawn.classList.add('red');
+            }
+        }
+
+        // fade away taken pawns
+        for (let index = 0; index < taken_pawns.length; index++) {
+            const element = taken_pawns[index];
+            document.getElementsByTagName("td")[element["y"] * 8 + element["x"]].children[0].classList.add("fader");
+        }
         await sleep(1000);
-    }
-
-    // promote pawns
-    if (move_list.length !== 0 && (move_list[move_list.length - 1]['y'] === 0 || move_list[move_list.length - 1]['y'] === 7)) {
-        const pawn = document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0];
-        if (pawn.classList.contains('white')) {
-            pawn.classList.remove('white');
-            pawn.classList.add('promotion')
-            pawn.classList.add('blue');
-        }
-        if (pawn.classList.contains('black')) {
-            pawn.classList.remove('black');
-            pawn.classList.add('promotion');
-            pawn.classList.add('red');
+    
+        // clear board
+        const el = document.getElementsByTagName('td');
+        for (let index = 0; index < el.length; index++) {
+            const element = el[index];
+            while (element.firstChild) element.removeChild(element.firstChild);
         }
     }
-
-    // fade away taken pawns
-    for (let index = 0; index < taken_pawns.length; index++) {
-        const element = taken_pawns[index];
-        document.getElementsByTagName("td")[element["y"] * 8 + element["x"]].children[0].classList.add("fader");
-    }
-    await sleep(1000);
-
-    // clear board
-    const el = document.getElementsByTagName('td');
-    for (let index = 0; index < el.length; index++) {
-        const element = el[index];
-        while (element.firstChild) element.removeChild(element.firstChild);
-    }
-
     // place new board status
     placePawns(output_board);
     await sleep(1000);
@@ -181,12 +185,22 @@ function toggleStartStopRobot() {
 }
 
 let UserActions = {
-    'end_game': 'Żądanie zakończenia rozgrywki wysłane do robota.',
-    'stop_robot': 'Żądanie wstrzymania ruchu robota zostało wysłane.',
-    'resume_robot': 'Żądanie wznowienia ruchu ramienia zostało wysłane.'
+    'end_game': 'Żądanie zakończenia rozgrywki wysłane.',
+    'stop_robot': 'Żądanie wstrzymania ruchu robota wysłane.',
+    'resume_robot': 'Żądanie wznowienia ruchu ramienia wysłane.'
+}
+
+var toastTrigger = document.getElementById("liveToastBtn");
+var toastLiveExample = document.getElementById("liveToast");
+if (toastTrigger) {
+    toastTrigger.addEventListener("click", function () {
+        var toast = new bootstrap.Toast(toastLiveExample);
+        toast.show();
+    });
 }
 
 function sendUserAction(type) {
     webSocket.send(JSON.stringify({'type': 'user_action', 'message': {'content': type}}));
     addToast(UserActions[type]);
+    gameStatusHandler(UserActions[type]);
 }
