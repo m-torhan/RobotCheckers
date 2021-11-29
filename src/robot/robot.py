@@ -220,13 +220,13 @@ class RobotCheckers(object):
                                                              *move.dest)
         # remove taken figures
         for figrure_pos in move.taken_figures:
-            free_pos = (30, 30) # self.__camera_handler.find_free_pos_outside_board()
+            free_pos = self.__camera_handler.find_free_pos_outside_board()
             self.__movement_handler.move_pawn_from_pos_to_pos(*self.__cam_pos_to_drv_pos(board_pos[figrure_pos]),
                                                               *self.__cam_pos_to_drv_pos(free_pos))
         
         # promote pawn
         if promoted:
-            free_pos = (30, 30) # self.__camera_handler.find_free_pos_outside_board()
+            free_pos = self.__camera_handler.find_free_pos_outside_board()
             self.__movement_handler.move_pawn_from_square_to_pos(*move.dest,
                                                                  *self.__cam_pos_to_drv_pos(free_pos))
 

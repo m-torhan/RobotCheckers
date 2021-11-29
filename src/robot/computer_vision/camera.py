@@ -8,6 +8,7 @@ import numpy as np
 import cv2
 import threading
 import time
+import random
 
 import src.robot.computer_vision.camera_config as camera_config
 
@@ -26,14 +27,48 @@ class CameraHandler(object):
         sq_side_cm = camera_config.board_size[0]//8
         px_per_cm = self.__sq_side//sq_side_cm
 
-        # board borders in pixels
-        self.__x_min = px_per_cm*(camera_config.gamearea_size[0] - camera_config.board_size[0]) + self.__sq_side*3//2
-        self.__y_min = self.__sq_side*3//2
-        xy_delta = self.__sq_side*6
-        self.__x_max = self.__x_min + xy_delta
-        self.__y_max = self.__y_min + xy_delta
+        # figures and hand colors
+        self.__colors_hsv_ranges = {
+            'white': (np.array((  0,   0, 160), dtype=np.uint8),
+                    np.array((255,  55, 255), dtype=np.uint8)),
+            'blue':  (np.array(( 90,  90,  50), dtype=np.uint8),
+                    np.array((120, 255, 255), dtype=np.uint8)),
+            'black': (np.array((  0,   0,   0), dtype=np.uint8),
+                    np.array((255, 255,  50), dtype=np.uint8)),
+            'red':   (np.array((160,  90,  80), dtype=np.uint8),
+                    np.array(( 30, 255, 255), dtype=np.uint8)),
+            'hand':  (np.array((180,  40, 100), dtype=np.uint8),
+                    np.array(( 30, 100, 220), dtype=np.uint8))
+        }
 
-        self.__bottom_right_corner = (self.__x_max + xy_delta//6, self.__y_max + xy_delta//6)
+        # gamearea and board positions
+        x_min = px_per_cm*(camera_config.gamearea_size[0] - camera_config.board_size[0]) + self.__sq_side*3//2
+        y_min = self.__sq_side*3//2
+        xy_delta = self.__sq_side*6
+        x_max = x_min + xy_delta
+        y_max = y_min + xy_delta
+
+        self.__board_range = [
+            [x_min, x_max],
+            [y_min, y_max]
+        ]
+        self.__gamearea_range = [
+            [x_max - (x_max - x_min)*camera_config.gamearea_size[0]//camera_config.board_size[0], x_max],
+            [y_min, y_min + (y_max - y_min)*camera_config.gamearea_size[1]//camera_config.board_size[1]]
+        ]
+
+        self.__bottom_right_corner = (x_max + xy_delta//6, y_max + xy_delta//6)
+
+        # kernel used in free space detection
+        kernel_diameter = self.__sq_side*5//4
+        self.__kernel = np.zeros((kernel_diameter,)*2)
+
+        for x in range(kernel_diameter):
+            for y in range(kernel_diameter):
+                if (x - kernel_diameter/2)**2 + (y - kernel_diameter/2)**2 <= (kernel_diameter/2)**2:
+                    self.__kernel[x,y] = 1
+
+        self.__kernel /= np.sum(self.__kernel)
 
         # board size in pixels
         self.__out_width = self.__sq_side*8*camera_config.gamearea_size[0]//camera_config.board_size[0] + self.__sq_side//2
@@ -103,45 +138,68 @@ class CameraHandler(object):
                     free_figures[color].append((x, y))
 
         return board_code, board_pos, free_figures, len(objects_positions['hand']) > 0
+    
+    def find_free_pos_outside_board(self):
+        frame_filtered_colors, frame_perp_crop = self.__fiter_frame_by_colors()
+
+        if frame_filtered_colors is None:
+            return None
+
+        free_area_mask = np.ones((self.__out_width, self.__out_height), dtype=np.uint8)
+
+        for _, img in frame_filtered_colors.items():
+            free_area_mask[img > 0] = 0
+
+        free_area_mask[self.__board_range[1][0]:self.__board_range[1][1],
+                       self.__board_range[0][0]:self.__board_range[0][1]] = 0
+
+        gamearea_mask = np.zeros_like(free_area_mask)
+        gamearea_mask[self.__gamearea_range[1][0]:self.__gamearea_range[1][1],
+                      self.__gamearea_range[0][0]:self.__gamearea_range[0][1]] = 1
+
+        free_area_mask[gamearea_mask == 0] = 0
+
+        temp = free_area_mask.astype(np.float64)
+
+        temp = 1 - temp
+        temp = cv2.filter2D(temp, -1, self.__kernel)
+        temp = 1 - temp
+        temp -= temp.min()
+        temp /= temp.max()
+
+        free_area_mask_bold = temp > .999
+
+        free_area_mask_grad = cv2.filter2D(free_area_mask_bold.astype(np.float64), -1, self.__kernel)
+
+        free_area_mask_grad = 1 - free_area_mask_grad
+        free_area_mask_grad -= free_area_mask_grad.min()
+        free_area_mask_grad /= free_area_mask_grad.max()
+
+        free_area_mask_grad[free_area_mask_bold == 0] = 0
+
+        w = np.where(free_area_mask_grad > .7)
+        i = random.randint(0, w[0].shape[0] - 1)
+
+        x = self.__bottom_right_corner[0] - w[1][i]/self.__sq_side
+        y = self.__bottom_right_corner[1] - w[0][i]/self.__sq_side
+        
+        if self.__debug and self.__debug_out.isOpened():
+            free_area_mask_grad_rgb = cv2.cvtColor(free_area_mask_grad, cv2.COLOR_GRAY2BGR)
+            free_area_mask_grad_rgb = cv2.circle(free_area_mask_grad_rgb, (w[1][i], w[0][i]), self.__sq_side//4, (0, 255, 0), -1)
+            free_area_mask_grad_unperp = cv2.warpPerspective(free_area_mask_grad_rgb, self.__warpPerspectiveMatrix, (640, 480), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP)
+
+            frame_masked = self.__frame.copy()
+            frame_masked[cv2.cvtColor(free_area_mask_grad_unperp, cv2.COLOR_RGB2GRAY) > 0] = 0
+
+            self.__debug_out.write(cv2.cvtColor(free_area_mask_grad_unperp + frame_masked, cv2.COLOR_RGB2BGR))
+
+        return x, y
 
     def __detect_objects_positions(self):
-        if self.__warpPerspectiveMatrix is None or self.__frame is None:
+        frame_filtered_colors, frame_perp_crop = self.__fiter_frame_by_colors()
+
+        if frame_filtered_colors is None:
             return None
-        
-        frame = cv2.cvtColor(self.__frame.copy(), cv2.COLOR_BGR2RGB)
-
-        frame_perp_crop = cv2.warpPerspective(frame, self.__warpPerspectiveMatrix, (self.__out_width, self.__out_height), flags=cv2.INTER_LINEAR)
-
-        frame_perp_crop_hsv = cv2.cvtColor(frame_perp_crop, cv2.COLOR_RGB2HSV)
-
-        colors_hsv_ranges = {
-            'white': (np.array((  0,   0, 160), dtype=np.uint8),
-                    np.array((255,  55, 255), dtype=np.uint8)),
-            'blue':  (np.array(( 90,  90,  50), dtype=np.uint8),
-                    np.array((120, 255, 255), dtype=np.uint8)),
-            'black': (np.array((  0,   0,   0), dtype=np.uint8),
-                    np.array((255, 255,  50), dtype=np.uint8)),
-            'red':   (np.array((160,  90,  80), dtype=np.uint8),
-                    np.array(( 30, 255, 255), dtype=np.uint8)),
-            'hand':  (np.array((180,  40, 100), dtype=np.uint8),
-                    np.array(( 30, 100, 220), dtype=np.uint8))
-        }
-
-        frame_filtered_colors = {}
-
-        for c, v in colors_hsv_ranges.items():
-            if v[0][0] < v[1][0]:
-                frame_filtered_colors[c] = cv2.inRange(frame_perp_crop_hsv, v[0], v[1])
-            else:
-                u_0 = v[0].copy()
-                u_0[0] = 0
-                frame_range_1 = cv2.inRange(frame_perp_crop_hsv, u_0, v[1])
-
-                u_1 = v[1].copy()
-                u_1[0] = 255
-                frame_range_2 = cv2.inRange(frame_perp_crop_hsv, v[0], u_1)
-
-                frame_filtered_colors[c] = cv2.bitwise_or(frame_range_1, frame_range_2)
 
         if self.__debug:
             debug_img_rects = np.zeros_like(frame_perp_crop)
@@ -156,17 +214,17 @@ class CameraHandler(object):
 
         objects_positions = {}
 
-        for col in colors_hsv_ranges.keys():
+        for col in self.__colors_hsv_ranges.keys():
             objects_positions[col] = []
             contours, _ = cv2.findContours(frame_filtered_colors[col], cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
 
             for c in contours:
                 x, y, w, h = cv2.boundingRect(c)
                 if (col != 'hand' and (self.__sq_side//2 < w < self.__sq_side and self.__sq_side//2 < h < self.__sq_side)) or\
-                (col == 'hand' and (w > self.__sq_side or h > self.__sq_side)):
+                   (col == 'hand' and (w > self.__sq_side or h > self.__sq_side)):
                     objects_positions[col].append(
                         ((self.__bottom_right_corner[0] - (x + w/2))/self.__sq_side,
-                        (self.__bottom_right_corner[1] - (y + h/2))/self.__sq_side)
+                         (self.__bottom_right_corner[1] - (y + h/2))/self.__sq_side)
                     )
 
                     if self.__debug:
@@ -175,12 +233,40 @@ class CameraHandler(object):
         if self.__debug and self.__debug_out.isOpened():
             debug_img_rects_unperp = cv2.warpPerspective(debug_img_rects, self.__warpPerspectiveMatrix, (640, 480), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP)
 
-            frame_masked = frame.copy()
+            frame_masked = self.__frame.copy()
             frame_masked[cv2.cvtColor(debug_img_rects_unperp, cv2.COLOR_RGB2GRAY) > 0] = 0
 
             self.__debug_out.write(cv2.cvtColor(debug_img_rects_unperp + frame_masked, cv2.COLOR_RGB2BGR))
 
         return objects_positions
+
+    def __fiter_frame_by_colors(self):
+        if self.__warpPerspectiveMatrix is None or self.__frame is None:
+            return None, None
+        
+        frame = cv2.cvtColor(self.__frame.copy(), cv2.COLOR_BGR2RGB)
+
+        frame_perp_crop = cv2.warpPerspective(frame, self.__warpPerspectiveMatrix, (self.__out_width, self.__out_height), flags=cv2.INTER_LINEAR)
+
+        frame_perp_crop_hsv = cv2.cvtColor(frame_perp_crop, cv2.COLOR_RGB2HSV)
+
+        frame_filtered_colors = {}
+
+        for c, v in self.__colors_hsv_ranges.items():
+            if v[0][0] < v[1][0]:
+                frame_filtered_colors[c] = cv2.inRange(frame_perp_crop_hsv, v[0], v[1])
+            else:
+                u_0 = v[0].copy()
+                u_0[0] = 0
+                frame_range_1 = cv2.inRange(frame_perp_crop_hsv, u_0, v[1])
+
+                u_1 = v[1].copy()
+                u_1[0] = 255
+                frame_range_2 = cv2.inRange(frame_perp_crop_hsv, v[0], u_1)
+
+                frame_filtered_colors[c] = cv2.bitwise_or(frame_range_1, frame_range_2)
+        
+        return frame_filtered_colors, frame_perp_crop
 
     def __cam_handler(self):
         while self.__run:
@@ -230,10 +316,11 @@ class CameraHandler(object):
 
         in_pts = np.float32([corners2[42], corners2[0], corners2[6], corners2[48]])
 
-        out_a = [self.__x_min, self.__y_min]
-        out_b = [self.__x_max, self.__y_min]
-        out_c = [self.__x_max, self.__y_max]
-        out_d = [self.__x_min, self.__y_max]
-        out_pts = np.float32([out_a, out_b, out_c, out_d])
+        out_pts = np.float32([
+            [self.__board_range[0][0], self.__board_range[1][0]],
+            [self.__board_range[0][1], self.__board_range[1][0]],
+            [self.__board_range[0][1], self.__board_range[1][1]], 
+            [self.__board_range[0][0], self.__board_range[1][1]]
+        ])
 
         self.__warpPerspectiveMatrix = cv2.getPerspectiveTransform(in_pts, out_pts)
