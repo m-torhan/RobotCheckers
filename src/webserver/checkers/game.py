@@ -18,6 +18,7 @@ class Game:
         self.__settings = None
         self.__checkers = None
         self.__run = False
+        self.__cleanup_requested = False
         self.__thread = threading.Thread(target=self.__game_thread)
         self.__thread.start()
 
@@ -48,7 +49,7 @@ class Game:
     def user_action(self, action):
         if action is UserAction.END_GAME and self.is_game_running():
             self.__run = False
-            self.__cleanup()
+            self.__cleanup_requested = True
 
     def send_game_board_status(self):
         if self.__checkers is None:
@@ -113,4 +114,7 @@ class Game:
                     self.__consumer.group_send_game_status(GameStatus.GAME_FINISHED, content)
                     self.__run = False
                 if not self.__run:
+                    if self.__cleanup_requested:
+                        self.__cleanup()
+                        self.__cleanup_requested = False
                     self.__checkers = Checkers()
