@@ -4,6 +4,7 @@ import numpy as np
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
+from typing import List, Tuple
 
 from webserver.checkers.common.consts import GROUP_NAME
 from webserver.checkers.common.game_status import GameStatus
@@ -56,8 +57,8 @@ class GameConsumer(WebsocketConsumer):
 
     def group_send_move(self, board_status: np.ndarray,
                         move_id: int = 0,
-                        move_steps: list[tuple[int, int]] = None,
-                        taken_pawns: list[tuple[int, int]] = None):
+                        move_steps: List[Tuple[int, int]] = None,
+                        taken_pawns: List[Tuple[int, int]] = None):
 
         playable_fields_status = board_status if isinstance(board_status, str) and len(board_status) == 32 \
             else map_board_to_playable_fields_str(board_status)
