@@ -1,5 +1,5 @@
 function switchTheme(){
-    let themeMode = localStorage.getItem('themeMode');
+    const themeMode = localStorage.getItem('themeMode');
     let switchThemeButton = document.getElementsByClassName('dark-mode-switch')[0];
     let sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
@@ -22,7 +22,7 @@ function switchTheme(){
 }
 
 function setThemeMode(){
-    let themeMode = localStorage.getItem('themeMode');
+    const themeMode = localStorage.getItem('themeMode');
     let switchThemeButton = document.getElementsByClassName('dark-mode-switch')[0];
     let sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
