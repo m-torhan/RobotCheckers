@@ -1,7 +1,7 @@
 function switchTheme(){
     let themeMode = localStorage.getItem('themeMode');
-    var switchThemeButton = document.getElementsByClassName('dark-mode-switch')[0];
-    var sheet = document.createElement('link');
+    let switchThemeButton = document.getElementsByClassName('dark-mode-switch')[0];
+    let sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
     if(themeMode === 'darkMode'){
       localStorage.setItem('themeMode', 'defaultMode'); 
@@ -14,7 +14,7 @@ function switchTheme(){
       localStorage.setItem('themeMode', 'darkMode');
       switchThemeButton.children[0].classList.remove('disabled');
       switchThemeButton.children[1].classList.add('disabled');
-      sheet.href = "/static/css/darkModeColors.css";
+      sheet.href = '/static/css/darkModeColors.css';
       sheet.id = 'darkStyleColors';  
       document.head.removeChild(document.getElementById('defaultStyleColors'));          
     }
@@ -23,14 +23,19 @@ function switchTheme(){
 
 function setThemeMode(){
     let themeMode = localStorage.getItem('themeMode');
-    var sheet = document.createElement('link');
+    let switchThemeButton = document.getElementsByClassName('dark-mode-switch')[0];
+    let sheet = document.createElement('link');
     sheet.rel = 'stylesheet';
     if(themeMode === 'darkMode'){
-        sheet.href = "/static/css/darkModeColors.css";
-        sheet.id = 'darkStyleColors';               
+        sheet.href = '/static/css/darkModeColors.css';
+        sheet.id = 'darkStyleColors';
+        switchThemeButton.children[0].classList.remove('disabled');
+        switchThemeButton.children[1].classList.add('disabled');              
     }else{
         sheet.href = '/static/css/defaultColors.css';
-        sheet.id = 'defaultStyleColors'; 
+        sheet.id = 'defaultStyleColors';
+        switchThemeButton.children[1].classList.remove('disabled');
+        switchThemeButton.children[0].classList.add('disabled');
     }
     document.head.appendChild(sheet);
 }

@@ -190,6 +190,15 @@ let UserActions = {
     'resume_robot': 'Żądanie wznowienia ruchu ramienia wysłane.'
 }
 
+var toastTrigger = document.getElementById("liveToastBtn");
+var toastLiveExample = document.getElementById("liveToast");
+if (toastTrigger) {
+    toastTrigger.addEventListener("click", function () {
+        var toast = new bootstrap.Toast(toastLiveExample);
+        toast.show();
+    });
+}
+
 function sendUserAction(type) {
     webSocket.send(JSON.stringify({'type': 'user_action', 'message': {'content': type}}));
     addToast(UserActions[type]);
