@@ -93,6 +93,12 @@ class RobotCheckers(object):
                 self.__checkers.oponent(self.__ai_player.num))
         return None
     
+    @property
+    def checkers_end(self):
+        if self.__checkers is not None:
+            return self.__checkers.end
+        return None
+    
     def start(self):
         self.__movement_handler.start()
         self.__camera_handler.start()
