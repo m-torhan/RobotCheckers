@@ -25,7 +25,7 @@ webSocket.onmessage = function (e) {
             addToast(data.message.content)
             break;
         case 'move':
-            document.getElementsByClassName("turn")[0].children[1].innerHTML = data.message.id + 1;
+            document.getElementsByClassName("turn")[0].children[1].innerHTML = data.message.id;
             movePawn(data.message.move_steps, data.message.new_board_status, data.message.taken_pawns);
 
             break;
@@ -110,6 +110,13 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function updateTakenPawnsCount(status_board){
+    const whiteCtr = status_board.split( '' ).filter( c => c === '1' || c === '2' ).length;
+    const blackCtr = status_board.split( '' ).filter( c => c === '3' || c === '4' ).length;
+    document.getElementById('taken-white').innerText = 12 - whiteCtr;
+    document.getElementById('taken-black').innerText = 12 - blackCtr;
+}
+
 async function movePawn(move_list, output_board, taken_pawns) {
     let x = 0, y = 0;
     let firstMove = document.getElementsByClassName('pawn').length === 0;
@@ -158,6 +165,7 @@ async function movePawn(move_list, output_board, taken_pawns) {
             while (element.firstChild) element.removeChild(element.firstChild);
         }
     }
+    updateTakenPawnsCount(output_board);
     // place new board status
     placePawns(output_board);
     await sleep(1000);
