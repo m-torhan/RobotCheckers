@@ -18,9 +18,11 @@ from game_logic.checkers import Checkers, Move
 from movement.driver import MovementHandler, driver_config
 
 class RobotCheckers(object):
-    def __init__(self):
+    def __init__(self, debug=0):
+        self.__debug = debug
+
         self.__movement_handler = MovementHandler()
-        self.__camera_handler = CameraHandler(True)
+        self.__camera_handler = CameraHandler(debug)
         self.__robot_thread = threading.Thread(target=self.__robot_handler)
 
         self.__checkers = None
@@ -93,6 +95,12 @@ class RobotCheckers(object):
                 self.__checkers.oponent(self.__ai_player.num))
         return None
     
+    @property
+    def checkers_end(self):
+        if self.__checkers is not None:
+            return self.__checkers.end
+        return None
+    
     def start(self):
         self.__movement_handler.start()
         self.__camera_handler.start()
@@ -124,7 +132,7 @@ class RobotCheckers(object):
             self.__ai_player = AIPlayerMinimax(robot_color, difficulty - 3)
 
         # board preparation
-        self.__prepare_board()
+        #self.__prepare_board()
     
     def start_game(self):
         if self.__checkers is not None:
@@ -147,6 +155,7 @@ class RobotCheckers(object):
                 continue
             
             while not self.__checkers.end:
+                time.sleep(.1)
                 if self.__checkers.player_turn == self.__ai_player.num:
                     robot_move, _, promoted = self.__ai_player.make_move(self.__checkers)
                     self.__make_move(robot_move, promoted)
@@ -307,17 +316,10 @@ class RobotCheckers(object):
             for y in range(8):
                 c = self.__checkers.board[x, y]
                 if c != 0 and c != board_code[x, y]:
-                    print('__', c)
-                    print(camera_config.pawns_code_colors[c])
-                    print(free_figures_indices[c - 1])
                     free_figure_pos = free_figures[camera_config.pawns_code_colors[c]][free_figures_indices[c - 1]]
                     to_move[c - 1].append((*self.__cam_pos_to_drv_pos(free_figure_pos), x, y))
 
                     free_figures_indices[c - 1] += 1
-
-        for l in to_move:
-            print(l)
-        print()
 
         for c in range(len(to_move)):
             for f_x, f_y, x, y in to_move[c]:
