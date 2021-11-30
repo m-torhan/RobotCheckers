@@ -148,7 +148,7 @@ input[type="range"]::-moz-range-progress {
 .log-box {
   width: 100%;
   height: 22vh;
-  min-height: 300px;
+  min-height: 350px;
   background-color: var(--secondary-color);
   border-radius: 6px;
 }
@@ -171,7 +171,7 @@ input[type="range"]::-moz-range-progress {
   margin-left: 2.5%;
   margin-right: 2.5%;
   position: relative;
-  height: 15%;
+  height: 20%;
   background-color: var(--primary-color)
 }
 
@@ -198,7 +198,7 @@ input[type="range"]::-moz-range-progress {
 }
 
 .toast-body {
-  color: var(--primary-color);
+  color: #6C6C6C;
 }
 
 .modal-content {

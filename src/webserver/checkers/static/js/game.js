@@ -13,6 +13,7 @@ const webSocket = new WebSocket(
 
 webSocket.onopen = function (e) {
     addEventToRegister("Połączenie z robotem pomyślne.");
+    websocketConnectionStatus()
 }
 
 webSocket.onmessage = function (e) {
@@ -21,7 +22,6 @@ webSocket.onmessage = function (e) {
     switch (message_type) {
         case 'game_status':
             updateWhosTurn(data.message.game_status);
-            gameStatusHandler(data.message.content);
             addToast(data.message.content)
             break;
         case 'move':
@@ -40,6 +40,7 @@ webSocket.onmessage = function (e) {
 webSocket.onclose = function (e) {
     addEventToRegister("Połączenie z robotem zostało niespodziewanie zakończone!");
     addToast("Komunikacja zerwana");
+    websocketConnectionStatus()
 };
 
 
@@ -103,7 +104,9 @@ function addEventToRegister(text) {
     p.innerHTML = "> " + text;
     const scrollArea = document.getElementsByClassName("card")[0];
     scrollArea.children[0].appendChild(p)
-    scrollArea.scrollTop = scrollArea.scrollHeight;
+    if(document.getElementsByName('autoscroll-log-box')[0].checked){
+        scrollArea.scrollTop = scrollArea.scrollHeight;
+    }
 }
 
 function sleep(ms) {
@@ -177,6 +180,7 @@ async function addToast(content) {
         const toastLiveExample = document.getElementById("liveToast");
         const toast = new bootstrap.Toast(toastLiveExample);
         toast.show();
+        gameStatusHandler(content);
     }
 }
 
@@ -210,5 +214,15 @@ if (toastTrigger) {
 function sendUserAction(type) {
     webSocket.send(JSON.stringify({'type': 'user_action', 'message': {'content': type}}));
     addToast(UserActions[type]);
-    gameStatusHandler(UserActions[type]);
+}
+
+function websocketConnectionStatus(){
+    const led = document.getElementById('connection-led')
+    if(webSocket.readyState === 1){
+        led.classList.value="badge bg-success mb-2";
+        led.innerText = 'Aktywne połączenie';
+    }else{
+        led.classList.value="badge bg-danger mb-2";
+        led.innerText = 'Brak połączenia'
+    }    
 }

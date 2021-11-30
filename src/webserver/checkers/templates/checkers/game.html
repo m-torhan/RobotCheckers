@@ -20,7 +20,7 @@
 </head>
 
 <body>
-    <div class="container-lg mt-3">
+    <div class="container-xl mt-3">
         <div class="dark-mode-switch" onclick="switchTheme()"><i class="bi bi-moon-fill me-1 disabled"></i> | <i class="bi bi-brightness-high-fill ms-1"></i></div>
         <div class="row mb-5">
           <div class="col-6">
@@ -34,10 +34,12 @@
         </div>
   
         <div class="row align-items-center mx-auto mt-5">
-          <div class="col-md-7">
+          <div class="col-lg-7">
             
             <div class="board-stats row">
-              <span class="col-5 col-lg-4">Wizualizacja planszy</span>
+              <span class="col-5 col-lg-4">
+                <span id="connection-led" style="width:auto">Połączono</span>
+              </span>
               <div class="col-7 col-lg-8 text-end">
                 <span>zbite białe: <span id="taken-white">0</span>,</span>
                 <span>zbite czarne: <span id="taken-black">0</span></span>
@@ -55,7 +57,7 @@
             </div>
           </div>
   
-          <div class="col-md-5 col-lg-4 offset-lg-1">
+          <div class="col-lg-5 col-xl-4 offset-xl-1">
             <hr width="98%" class="hr-line ps-1 d-block d-md-none" />
             <div class="game-info">
               <div class="turn">
@@ -66,15 +68,19 @@
               </div>
             </div>
   
-            <div class="log-box mt-lg-5 d-none d-md-block">
+            <div class="log-box mt-md-4 d-none d-md-block">
+              <div class="col-12 mt-3 me-3">
+                <div class="float-end mt-2 me-3 ps-2 pe-2" style="background-color: var(--primary-color); border-radius: 5px;">
+                  <input type="checkbox" name="autoscroll-log-box" checked/> <span class="text-end"> Autoscroll</span>
+                </div>
               <h4 class="pt-2 ps-4">Rejestr zdarzeń</h4>
+              </div>
               <div class="card content scrollbar">
                 <div class="card-body"></div>
-              </div>
-              <h5 class="pt-2 ps-4">Ostatni status</h5>
+              </div>                            
+              <h5 class="col-12 pt-2 ps-4">Ostatni status</h5>
               <div class="last-status card">
-                <div class='card-body pt-2'>Witaj w grze</div>
-                
+                <div class='card-body pt-2'>Witaj w grze</div>                
               </div>
             </div>
             <div class="row mt-3 mt-lg-5">
@@ -112,7 +118,7 @@
           <div class="modal-content">
               <div class="modal-header">
               <h5 class="modal-title" id="staticBackdropLabel">Powrót do menu</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
+                  <button class="btn-close" style="background: transparent;" type="button" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i></button>
               </div>
               <div class="modal-body">
               <p class="mb-0">Gra zostanie przerwana i rozgrywka zakończona.</p>
