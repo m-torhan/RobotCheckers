@@ -28,6 +28,7 @@ class RobotCheckers(object):
         self.__checkers = None
         self.__ai_player = None
         self.__play = False
+        self.__game_initialized = False
 
         self.__player_move_valid = True
         self.__robot_arm_moving = False
@@ -115,8 +116,8 @@ class RobotCheckers(object):
         self.__camera_handler.stop()
         self.__movement_handler.stop()
 
-    def initialize_game(self, robot_color, difficulty):
-        self.__checkers = Checkers()
+    def initialize_game(self, robot_color, difficulty, board=None, turn=None):
+        self.__checkers = Checkers(board, turn)
 
         if difficulty == 1:
             # random
@@ -132,11 +133,16 @@ class RobotCheckers(object):
             self.__ai_player = AIPlayerMinimax(robot_color, difficulty - 3)
 
         # board preparation
-        #self.__prepare_board()
+        self.__prepare_board()
     
     def start_game(self):
         if self.__checkers is not None:
             self.__play = True
+        
+    def abort_game(self):
+        if self.__checkers is not None:
+            self.__play = False
+            self.__checkers = None
 
     def __robot_handler(self):
         # calibration
@@ -150,7 +156,7 @@ class RobotCheckers(object):
         # main robot loop
         while self.__run:
             time.sleep(.1)
-            if self.__play == False:
+            if self.__play == False or self.__checkers is None:
                 # no game to play
                 continue
             
@@ -170,6 +176,7 @@ class RobotCheckers(object):
                         self.__player_move_valid = False
             
             self.__play = False
+            self.__checkers = None
 
     def __get_player_move(self):
         timer = None
@@ -261,6 +268,7 @@ class RobotCheckers(object):
     
     def __prepare_board(self):
         board_code = None
+        board_pos = None
         free_figures = None
         timer = None
 
@@ -292,7 +300,7 @@ class RobotCheckers(object):
             time.sleep(.1)
 
         while self.__run:
-            board_code, _, free_figures, hand_above_board = self.__camera_handler.read_board()
+            board_code, board_pos, free_figures, hand_above_board = self.__camera_handler.read_board()
             
             if not hand_above_board:
                 if timer is None:
@@ -305,25 +313,33 @@ class RobotCheckers(object):
             
             time.sleep(.1)
         
-
         if not self.__run:
             return
 
-        to_move = [[], [], [], []]
+        to_remove = []
+        to_move = []
         free_figures_indices = [0, 0, 0, 0]
 
         for x in range(8):
             for y in range(8):
-                c = self.__checkers.board[x, y]
-                if c != 0 and c != board_code[x, y]:
-                    free_figure_pos = free_figures[camera_config.pawns_code_colors[c]][free_figures_indices[c - 1]]
-                    to_move[c - 1].append((*self.__cam_pos_to_drv_pos(free_figure_pos), x, y))
+                curr = board_code[x, y]
+                target = self.__checkers.board[x, y]
+                if target != curr:
+                    if curr != 0:
+                        to_remove.append(self.__cam_pos_to_drv_pos(board_pos[x, y]))
 
-                    free_figures_indices[c - 1] += 1
+                    if target != 0:
+                        free_figure_pos = free_figures[camera_config.pawns_code_colors[target]][free_figures_indices[target - 1]]
+                        to_move.append((*self.__cam_pos_to_drv_pos(free_figure_pos), x, y))
 
-        for c in range(len(to_move)):
-            for f_x, f_y, x, y in to_move[c]:
-                self.__movement_handler.move_pawn_from_pos_to_square(f_x, f_y, x, y)
+                        free_figures_indices[target - 1] += 1
+
+        for x, y in to_remove:
+            free_pos = self.__camera_handler.find_free_pos_outside_board()
+            self.__movement_handler.move_pawn_from_pos_to_pos(x, y, *free_pos)
+
+        for f_x, f_y, x, y in to_move:
+            self.__movement_handler.move_pawn_from_pos_to_square(f_x, f_y, x, y)
         
         time.sleep(1)
 
