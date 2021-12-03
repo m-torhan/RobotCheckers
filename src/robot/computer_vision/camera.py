@@ -369,10 +369,18 @@ class CameraHandler(object):
         self.__warpPerspectiveMatrix = cv2.getPerspectiveTransform(in_pts, out_pts)
 
     def __stream_handler(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip_address = s.getsockname()[0]
-        s.close()
+        ip_address = 'localhost'
+
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(('8.8.8.8', 80))
+            ip_address = s.getsockname()[0]
+            s.close()
+        except:
+            try:
+                s.close()
+            except:
+                pass
 
         stream_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
@@ -382,25 +390,32 @@ class CameraHandler(object):
 
         while self.__run:
             try:
-                conn, addr = stream_socket.accept()
+                conn, _ = stream_socket.accept()
 
-                i = 0
                 while self.__run:
+                    time.sleep(.01)
                     try:
-                        frame = camera.read_debug_frame()
+                        frame = self.read_debug_frame()
 
                         if frame is None:
-                            frame = camera.read_frame()
+                            frame = self.read_frame()
 
                         if frame is not None:
-                            data = pickle.dumps(frame) ### new code
+                            data = pickle.dumps(frame)
                             conn.sendall(struct.pack('L', len(data)) + data)
-                            i += 1
 
                     except:
                         break
+
+                try:
+                    conn.close()
+                except:
+                    pass
+
             except:
                 pass
+        
+        stream_socket.close()
 
 if __name__ == '__main__':
     camera = CameraHandler(debug_mode=2)
