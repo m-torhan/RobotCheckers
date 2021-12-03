@@ -45,6 +45,7 @@ available_moves = None
 player_1 = None
 player_2 = None
 score = [0, 0, 0]
+move_time = [[], []]
 
 def game():
     global checkers
@@ -63,18 +64,22 @@ def game():
         #player_1 = ai_player.AIPlayerRandom(player_1_num)
         player_1 = ai_player.AIPlayerMinimax(player_1_num, 2)
         #player_2 = ai_player.AIPlayerRandom(player_2_num)
-        player_2 = ai_player.AIPlayerMonteCarlo(player_2_num, 30)
+        #player_2 = ai_player.AIPlayerMonteCarlo(player_2_num, 30)
         #player_2 = ai_player.AIPlayerMinimax(player_2_num, 2)
+        player_2 = ai_player.AIPlayerAlphaBeta(player_2_num, 2)
 
         while not checkers.end and run:
-            sleep(1)
+            #sleep(1)
             available_moves = checkers.calc_available_moves_for_player(checkers.player_turn)
-            sleep(.5)
+            #sleep(.5)
+            time_0 = perf_counter()
             if checkers.player_turn == player_1.num:
                 _ = player_1.make_move(checkers)
 
             elif checkers.player_turn == player_2.num:
                 _ = player_2.make_move(checkers)
+            
+            move_time[checkers.player_turn == player_1.num].append(perf_counter() - time_0)
             
         if checkers.end:
             if checkers.winner == player_1_num:
@@ -160,6 +165,8 @@ while run:
             for i in range(len(move.chain) - 1):
                 pygame.draw.line(window, (r, g, b), np.array(move.chain[i])*32 + 16, np.array(move.chain[i + 1])*32 + 16, 8)
 
+    if len(move_time[0]) > 0 and len(move_time[1]) > 0:
+        draw_text(f'{sum(move_time[0])/len(move_time[0]):.05f} {sum(move_time[1])/len(move_time[1]):.05f}', 16, (255,)*3, window, (384, 64))
     draw_text(f'{type(player_1).__name__} {type(player_2).__name__}', 16, (255,)*3, window, (384, 96))
     draw_text(f'{score}', 32, (255,)*3, window, (384, 128))
 
