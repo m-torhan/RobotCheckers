@@ -8,6 +8,7 @@ import random
 
 import src.robot.ai.minimax as minimax
 import src.robot.ai.monte_carlo as monte_carlo
+import src.robot.ai.alphabeta as alphabeta
 
 class __AIPlayer(object):
     def __init__(self, num):
@@ -24,6 +25,18 @@ class AIPlayerRandom(__AIPlayer):
     def make_move(self, checkers):
         available_moves = checkers.calc_available_moves_for_player(self.num)
         move = random.choice(available_moves)
+
+        ret, promoted = checkers.make_move(move)
+        
+        return move, ret, promoted
+        
+class AIPlayerAlphaBeta(__AIPlayer):
+    def __init__(self, num, max_depth):
+        super(AIPlayerAlphaBeta, self).__init__(num)
+        self.__max_depth = max_depth
+
+    def make_move(self, checkers):
+        move = alphabeta.get_best_move(checkers, self.__max_depth)
 
         ret, promoted = checkers.make_move(move)
         

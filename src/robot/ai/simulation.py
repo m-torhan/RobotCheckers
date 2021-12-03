@@ -61,15 +61,16 @@ def game():
         player_1_num = int(r == 0)
         player_2_num = int(r != 0)
         #player_1 = ai_player.AIPlayerRandom(player_1_num)
-        player_1 = ai_player.AIPlayerMinimax(player_1_num, 2)
+        player_1 = ai_player.AIPlayerMinimax(player_1_num, 1)
         #player_2 = ai_player.AIPlayerRandom(player_2_num)
-        player_2 = ai_player.AIPlayerMonteCarlo(player_2_num, 30)
+        #player_2 = ai_player.AIPlayerMonteCarlo(player_2_num, 30)
         #player_2 = ai_player.AIPlayerMinimax(player_2_num, 2)
+        player_2 = ai_player.AIPlayerAlphaBeta(player_2_num, 2)
 
         while not checkers.end and run:
-            sleep(1)
+            #sleep(1)
             available_moves = checkers.calc_available_moves_for_player(checkers.player_turn)
-            sleep(.5)
+            #sleep(.5)
             if checkers.player_turn == player_1.num:
                 _ = player_1.make_move(checkers)
 
