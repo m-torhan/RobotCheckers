@@ -1,7 +1,7 @@
 import numpy as np
 
 class Checkers(object):
-    def __init__(self, board=None):
+    def __init__(self, board=None, turn=None):
         self.__end = False
         self.__player_turn = 0
         self.__board = np.zeros((8, 8), dtype=np.uint8)
@@ -20,6 +20,9 @@ class Checkers(object):
                             self.__board[i, j] = 1
                         elif j >= 5:
                             self.__board[i, j] = 3
+        
+        if turn is not None:
+            self.__player_turn = turn
 
     @property
     def player_turn(self):
