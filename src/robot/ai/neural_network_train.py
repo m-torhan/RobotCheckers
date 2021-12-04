@@ -265,7 +265,7 @@ def train_fun():
             if checkers.winner == player_1.num:
                 score_rand += 1
 
-        print(f' score (vs rand): {score_rand/eval_duels:.4f}')
+        print(f' score (vs rand): {score_rand/eval_duels:.4f}', end='')
 
         player_2_layers = []
         score_ab = 0
@@ -293,9 +293,9 @@ def train_fun():
             if checkers.winner == player_1.num:
                 score_ab += 1
 
-        print(f' score (vs ab): {score_ab/eval_duels:.4f}'.replace('.', '_'))
+        print(f' score (vs ab): {score_ab/eval_duels:.4f}')
 
-        generation[0][1].save_network(f'./neural_networks/gen_{generation_num}_{score_rand/eval_duels}_{score_ab/eval_duels}/'.replace('.', '_'))
+        generation[0][1].save_network(f'./neural_networks/gen_{generation_num}_{score_rand/eval_duels:.3f}_{score_ab/eval_duels:.3f}/'.replace('.', '_'))
 
         # remove worst
         generation = generation[:int(len(generation)*top_rate)]
