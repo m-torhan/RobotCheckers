@@ -96,7 +96,7 @@ function updateWhosTurn(whosTurn) {
     } else if (whosTurn === "PLAYERS_MOVE_STARTED") {
         document.getElementsByClassName("whos-move")[0].children[1].innerHTML = "Gracz";
     }
-    sessionStorage.setItem('whoMoves', sessionStorage.getItem('whoMoves') === 'Gracz' ? 'Robot' : 'Gracz');
+    sessionStorage.setItem('whoMoves', whosTurn === 'PLAYERS_MOVE_STARTED' ? 'Gracz' : 'Robot');
 }
 
 function addEventToRegister(text) {
