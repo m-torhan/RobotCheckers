@@ -9,6 +9,7 @@ import random
 import src.robot.ai.minimax as minimax
 import src.robot.ai.monte_carlo as monte_carlo
 import src.robot.ai.alphabeta as alphabeta
+import src.robot.ai.neural_network as neural_network
 
 class __AIPlayer(object):
     def __init__(self, num):
@@ -61,6 +62,18 @@ class AIPlayerMonteCarlo(__AIPlayer):
 
     def make_move(self, checkers):
         move = monte_carlo.get_best_move(checkers, self.__simulations)
+        
+        ret, promoted = checkers.make_move(move)
+        
+        return move, ret, promoted
+
+class AIPlayerNeuralNetwork(__AIPlayer):
+    def __init__(self, num, network_folder):
+        super(AIPlayerNeuralNetwork, self).__init__(num)
+        self.__network = neural_network.get_network(network_folder)
+    
+    def make_move(self, checkers):
+        move = self.__network.get_best_move(checkers)
         
         ret, promoted = checkers.make_move(move)
         

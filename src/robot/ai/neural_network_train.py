@@ -12,7 +12,7 @@ import numpy as np
 import random
 
 from src.robot.game_logic.checkers import Checkers
-from src.robot.ai.ai_player import AIPlayerRandom
+from src.robot.ai.ai_player import AIPlayerAlphaBeta, AIPlayerMinimax, AIPlayerRandom
 
 window_width = 768
 window_height = 512
@@ -21,7 +21,7 @@ generation_size = 100
 top_rate = .2
 mutation_rate = .05
 duels_per_generation = 4
-eval_duels = 100
+eval_duels = 50
 
 def sigmoid(x):
     return np.power(1 + np.exp(-x), -1)
@@ -134,6 +134,40 @@ class AIPlayerNeuralNetworkGenetic(object):
         for i in range(len(self.__biases)):
             self.__biases[i] += np.random.normal(size=self.__biases[i].shape)/self.__biases[i].shape[0]*\
                                 (np.random.randint(4, size=self.__biases[i].shape) == 0)/16
+    
+    def save_network(self, folder_name):
+        if not os.path.isdir(folder_name):
+            os.makedirs(folder_name)
+        
+        for i, kernel in enumerate(self.__kernels):
+            np.save(os.path.join(folder_name, f'kernel_{i}'), kernel)
+
+        for i, bias in enumerate(self.__biases):
+            np.save(os.path.join(folder_name, f'bias_{i}'), bias)
+    
+    @classmethod
+    def load_network(self, folder_name):
+        i = 0
+
+        ai_player = AIPlayerNeuralNetworkGenetic()
+
+        while True:
+            try:
+                kernel = np.load(os.path.join(folder_name, f'kernel_{i}'))
+                ai_player.__kernels.append(kernel)
+                i += 1
+            except:
+                break
+
+        while True:
+            try:
+                bias = np.load(os.path.join(folder_name, f'bias_{i}'))
+                ai_player.__biases.append(bias)
+                i += 1
+            except:
+                break
+        
+        return ai_player
 
 available_moves = None
 checkers = None
@@ -166,7 +200,7 @@ def train_fun():
             pairs = [(shuffled[2*i], shuffled[2*i + 1]) for i in range(generation_size//2)]
         
             for i, (player_1_idx, player_2_idx) in enumerate(pairs):
-                print(f'\r{d + 1}/{duels_per_generation}  {i + 1}/{len(pairs)}  ', end='')
+                print(f'\r{generation_num} {d + 1}/{duels_per_generation}  {i + 1}/{len(pairs)}  ', end='')
 
                 checkers = Checkers()
 
@@ -202,8 +236,11 @@ def train_fun():
         # new generation
         generation.sort(key=lambda x: x[0], reverse=True)
         
+        print(f' {generation[0][0]} ', end='')
+
         # evaluate best
-        score = 0
+        player_2_layers = []
+        score_rand = 0
         for _ in range(eval_duels):
             checkers = Checkers()
 
@@ -218,6 +255,7 @@ def train_fun():
                 time_0 = perf_counter()
                 if checkers.player_turn == player_1.num:
                     _ = player_1.make_move(checkers)
+                    player_1_layers = player_1.layers
 
                 elif checkers.player_turn == player_2.num:
                     _ = player_2.make_move(checkers)
@@ -225,9 +263,39 @@ def train_fun():
                 move_time[checkers.player_turn == player_1.num].append(perf_counter() - time_0)
             
             if checkers.winner == player_1.num:
-                score += 1
+                score_rand += 1
 
-        print(f' score: {score}')
+        print(f' score (vs rand): {score_rand/eval_duels:.4f}')
+
+        player_2_layers = []
+        score_ab = 0
+        for _ in range(eval_duels):
+            checkers = Checkers()
+
+            r = random.getrandbits(1)
+            player_1 = generation[0][1]
+            player_1.num = int(r == 0)
+            player_2 = AIPlayerAlphaBeta(int(r != 0), 4)
+
+            while not checkers.end and run:
+                available_moves = checkers.calc_available_moves_for_player(checkers.player_turn)
+
+                time_0 = perf_counter()
+                if checkers.player_turn == player_1.num:
+                    _ = player_1.make_move(checkers)
+                    player_1_layers = player_1.layers
+
+                elif checkers.player_turn == player_2.num:
+                    _ = player_2.make_move(checkers)
+                
+                move_time[checkers.player_turn == player_1.num].append(perf_counter() - time_0)
+            
+            if checkers.winner == player_1.num:
+                score_ab += 1
+
+        print(f' score (vs ab): {score_ab/eval_duels:.4f}'.replace('.', '_'))
+
+        generation[0][1].save_network(f'./neural_networks/gen_{generation_num}_{score_rand/eval_duels}_{score_ab/eval_duels}/'.replace('.', '_'))
 
         # remove worst
         generation = generation[:int(len(generation)*top_rate)]
@@ -239,8 +307,11 @@ def train_fun():
         
         # mutate
         for i in range(generation_size):
+            generation[i][0] = 0
             if random.random() < mutation_rate:
                 generation[i][1].mutate()
+
+        generation_num += 1
 
 train_thread = threading.Thread(target=train_fun)
 thread_started = False

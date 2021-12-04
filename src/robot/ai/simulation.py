@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 import random
 
-import src.robot.ai.ai_player as ai_player
+from src.robot.ai.ai_player import AIPlayerRandom, AIPlayerMonteCarlo, AIPlayerMinimax, AIPlayerAlphaBeta, AIPlayerNeuralNetwork
 from src.robot.game_logic.checkers import Checkers
 
 rec_vid = False
@@ -47,6 +47,8 @@ player_2 = None
 score = [0, 0, 0]
 move_time = [[], []]
 
+max_queens = 0
+
 def game():
     global checkers
     global available_moves
@@ -54,6 +56,7 @@ def game():
     global score
     global player_1
     global player_2
+    global max_queens
 
     while run:
 
@@ -61,14 +64,16 @@ def game():
         r = random.getrandbits(1)
         player_1_num = int(r == 0)
         player_2_num = int(r != 0)
-        #player_1 = ai_player.AIPlayerRandom(player_1_num)
-        player_1 = ai_player.AIPlayerMinimax(player_1_num, 2)
-        #player_2 = ai_player.AIPlayerRandom(player_2_num)
-        #player_2 = ai_player.AIPlayerMonteCarlo(player_2_num, 30)
-        #player_2 = ai_player.AIPlayerMinimax(player_2_num, 2)
-        player_2 = ai_player.AIPlayerAlphaBeta(player_2_num, 2)
+        player_1 = AIPlayerRandom(player_1_num)
+        #player_1 = AIPlayerMinimax(player_1_num, 2)
+        #player_2 = AIPlayerRandom(player_2_num)
+        #player_2 = AIPlayerMonteCarlo(player_2_num, 30)
+        #player_2 = AIPlayerMinimax(player_2_num, 2)
+        player_2 = AIPlayerNeuralNetwork(player_2_num, './neural_networks/gen_1_0.0')
 
         while not checkers.end and run:
+            queens = ((checkers.board == 2) | (checkers.board == 4)).sum()
+            max_queens = max(max_queens, queens)
             #sleep(1)
             available_moves = checkers.calc_available_moves_for_player(checkers.player_turn)
             #sleep(.5)
@@ -169,6 +174,7 @@ while run:
         draw_text(f'{sum(move_time[0])/len(move_time[0]):.05f} {sum(move_time[1])/len(move_time[1]):.05f}', 16, (255,)*3, window, (384, 64))
     draw_text(f'{type(player_1).__name__} {type(player_2).__name__}', 16, (255,)*3, window, (384, 96))
     draw_text(f'{score}', 32, (255,)*3, window, (384, 128))
+    draw_text(f'{max_queens}', 16, (255,)*3, window, (384, 160))
 
     pygame.display.update()
 
