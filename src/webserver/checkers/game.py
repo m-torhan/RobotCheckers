@@ -48,28 +48,36 @@ class Game:
     def is_game_running(self):
         return self.__run
 
+    def is_consumer_set(self):
+        return self.__consumer is not None
+
     def user_action(self, action):
         if action is UserAction.END_GAME and self.is_game_running():
             self.__run = False
             self.__cleanup_requested = True
 
     def send_game_board_status(self):
-        if self.__robot is None or self.__robot.board_from_checkers is None:
-            board = ROBOT_STARTS_BOARD if self.__settings.start_mode == StartMode.ROBOT else PLAYER_STARTS_BOARD
-            self.__consumer.group_send_move(board, 0, [], [])
-        else:
-            all_moves = self.__robot.all_moves
-            if all_moves is not None and len(all_moves) > 0:
-                last_move = self.__robot.all_moves[-1]
-                self.__consumer.group_send_move(self.__robot.board_from_checkers,
-                                                self.__robot.turn_counter,
-                                                last_move.chain,
-                                                last_move.taken_figures)
+        if self.is_consumer_set():
+            if self.__robot is None or self.__robot.board_from_checkers is None:
+                board = ROBOT_STARTS_BOARD if self.__settings.start_mode == StartMode.ROBOT else PLAYER_STARTS_BOARD
+                self.__consumer.group_send_move(board, 0, [], [])
             else:
-                self.__consumer.group_send_move(self.__robot.board_from_checkers,
-                                                self.__robot.turn_counter,
-                                                [],
-                                                [])
+                all_moves = self.__robot.all_moves
+                if all_moves is not None and len(all_moves) > 0:
+                    last_move = self.__robot.all_moves[-1]
+                    self.__consumer.group_send_move(self.__robot.board_from_checkers,
+                                                    self.__robot.turn_counter,
+                                                    last_move.chain,
+                                                    last_move.taken_figures)
+                else:
+                    self.__consumer.group_send_move(self.__robot.board_from_checkers,
+                                                    self.__robot.turn_counter,
+                                                    [],
+                                                    [])
+
+    def send_game_status(self, game_status: GameStatus, content: str = ''):
+        if self.is_consumer_set():
+            self.__consumer.group_send_game_status(game_status, content)
 
     def __cleanup(self):
         self.__settings.clear_all()
@@ -84,9 +92,9 @@ class Game:
             else:
                 try_counter += 1
                 if try_counter % 10:
-                    self.__consumer.group_send_game_status(GameStatus.BOARD_COULD_NOT_BE_CALIBRATED_BY_CV)
+                    self.send_game_status(GameStatus.BOARD_COULD_NOT_BE_CALIBRATED_BY_CV)
                 sleep(0.5)
-        self.__consumer.group_send_game_status(GameStatus.CALIBRATION_FINISHED)
+        self.send_game_status(GameStatus.CALIBRATION_FINISHED)
 
         while True:
             if not self.__run:
@@ -99,11 +107,11 @@ class Game:
                     start_states = (0 if self.__settings.start_mode == StartMode.PLAYER else 1,
                                     0 if self.__settings.start_mode == StartMode.ROBOT else 1)
 
-                self.__consumer.group_send_game_status(GameStatus.BOARD_PREPARATION_STARTED)
+                self.send_game_status(GameStatus.BOARD_PREPARATION_STARTED)
                 self.__robot.initialize_game(start_states[1], self.__settings.difficulty)
-                self.__consumer.group_send_game_status(GameStatus.BOARD_PREPARATION_FINISHED)
+                self.send_game_status(GameStatus.BOARD_PREPARATION_FINISHED)
 
-                self.__consumer.group_send_game_status(
+                self.send_game_status(
                     GameStatus.PLAYERS_MOVE_STARTED if self.__settings.start_mode == StartMode.PLAYER else
                     GameStatus.ROBOTS_MOVE_STARTED
                 )
@@ -115,7 +123,7 @@ class Game:
                     if self.__robot.turn_counter != turn_ctr:
                         turn_ctr = self.__robot.turn_counter
                         self.send_game_board_status()
-                        self.__consumer.group_send_game_status(
+                        self.send_game_status(
                             GameStatus.PLAYERS_MOVE_STARTED if self.__robot.player_turn else
                             GameStatus.ROBOTS_MOVE_STARTED
                         )
@@ -132,7 +140,7 @@ class Game:
                         elif winner == Winner.PLAYER2:
                             content += "wygrał gracz2"
                     self.__robot.abort_game()
-                    self.__consumer.group_send_game_status(GameStatus.GAME_FINISHED, content)
+                    self.send_game_status(GameStatus.GAME_FINISHED, content)
                     self.__run = False
                 if not self.__run:
                     if self.__cleanup_requested:
