@@ -162,13 +162,15 @@ class RobotCheckers(object):
             
             while not self.__checkers.end:
                 time.sleep(.1)
-                if self.__checkers.player_turn == self.__ai_player.num:
+                if self.__checkers is None:
+                    break
+                if self.__checkers is not None and self.__checkers.player_turn == self.__ai_player.num:
                     robot_move, _, promoted = self.__ai_player.make_move(self.__checkers)
                     self.__make_move(robot_move, promoted)
                 else:
                     player_move = self.__get_player_move()
 
-                    if player_move is not None and self.__checkers.is_move_valid(player_move):
+                    if player_move is not None and self.__checkers is not None and self.__checkers.is_move_valid(player_move):
                         self.__player_move_valid = True
                         self.__checkers.make_move(player_move)
 
