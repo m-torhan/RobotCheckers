@@ -3,6 +3,7 @@ const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
     return new bootstrap.Tooltip(tooltipTriggerEl)
 });
 
+let toastCtr = 0;
 const webSocket = new WebSocket(
     'ws://'
     + window.location.host
@@ -25,12 +26,8 @@ webSocket.onmessage = function (e) {
             addToast(data.message.content)
             break;
         case 'move':
-            document.getElementsByClassName("turn")[0].children[1].innerHTML = data.message.id;
+            document.getElementsByClassName("turn")[0].children[1].innerHTML = data.message.id + 1;
             movePawn(data.message.move_steps, data.message.new_board_status, data.message.taken_pawns);
-
-            break;
-        case 'toast':
-            addToast(data.message.msg);
             break;
         default:
             console.log(`Unsupported message type: ${expr}`);
@@ -125,41 +122,46 @@ async function movePawn(move_list, output_board, taken_pawns) {
     let firstMove = document.getElementsByClassName('pawn').length === 0;
 
     if(!firstMove){
-        // make moves
-        for (let i = 0; i < move_list.length - 1; i++) {
-            x += move_list[i + 1]["x"] - move_list[i]["x"];
-            y += move_list[i + 1]["y"] - move_list[i]["y"];
+        try{
+            // make moves
+            for (let i = 0; i < move_list.length - 1; i++) {
+                x += move_list[i + 1]["x"] - move_list[i]["x"];
+                y += move_list[i + 1]["y"] - move_list[i]["y"];
 
-            document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0].classList.add("animate-move");
-            document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0].style.transform =
-                "translate(" + (x) * 125 + "%," + (y) * 125 + "%)";
+                document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0].classList.add("animate-move");
+                document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0].style.transform =
+                    "translate(" + (x) * 125 + "%," + (y) * 125 + "%)";
 
-            addEventToRegister(`${sessionStorage.getItem('whoMoves')} wykonał ruch z pola (${move_list[i]["x"]},${move_list[i]["y"]}) do (${move_list[i + 1]["x"]},${move_list[i + 1]["y"]})`);
+                addEventToRegister(`${sessionStorage.getItem('whoMoves')} wykonał ruch z pola (${move_list[i]["x"]},${move_list[i]["y"]}) do (${move_list[i + 1]["x"]},${move_list[i + 1]["y"]})`);
 
+                await sleep(1000);
+            }
+
+            // promote pawns
+            if (move_list.length !== 0 && (move_list[move_list.length - 1]['y'] === 0 || move_list[move_list.length - 1]['y'] === 7)) {
+                const pawn = document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0];
+                if (pawn.classList.contains('white')) {
+                    pawn.classList.remove('white');
+                    pawn.classList.add('promotion')
+                    pawn.classList.add('blue');
+                }
+                if (pawn.classList.contains('black')) {
+                    pawn.classList.remove('black');
+                    pawn.classList.add('promotion');
+                    pawn.classList.add('red');
+                }
+            }
+
+            // fade away taken pawns
+            for (let index = 0; index < taken_pawns.length; index++) {
+                const element = taken_pawns[index];
+                document.getElementsByTagName("td")[element["y"] * 8 + element["x"]].children[0].classList.add("fader");
+            }
             await sleep(1000);
         }
-
-        // promote pawns
-        if (move_list.length !== 0 && (move_list[move_list.length - 1]['y'] === 0 || move_list[move_list.length - 1]['y'] === 7)) {
-            const pawn = document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0];
-            if (pawn.classList.contains('white')) {
-                pawn.classList.remove('white');
-                pawn.classList.add('promotion')
-                pawn.classList.add('blue');
-            }
-            if (pawn.classList.contains('black')) {
-                pawn.classList.remove('black');
-                pawn.classList.add('promotion');
-                pawn.classList.add('red');
-            }
+        catch(error){
+            
         }
-
-        // fade away taken pawns
-        for (let index = 0; index < taken_pawns.length; index++) {
-            const element = taken_pawns[index];
-            document.getElementsByTagName("td")[element["y"] * 8 + element["x"]].children[0].classList.add("fader");
-        }
-        await sleep(1000);
     
         // clear board
         const el = document.getElementsByTagName('td');
@@ -176,11 +178,18 @@ async function movePawn(move_list, output_board, taken_pawns) {
 
 async function addToast(content) {
     if (content !== '') {
+        const d = new Date();
+        const timestamp = d.getUTCHours()+":"+d.getUTCMinutes()+":"+d.getUTCSeconds();
         document.getElementsByClassName("toast-body")[0].innerText = content;
-        const toastLiveExample = document.getElementById("liveToast");
-        const toast = new bootstrap.Toast(toastLiveExample);
+        document.getElementsByClassName("toast-timestamp")[0].innerText = timestamp;
+        const toastDiv = document.getElementsByClassName("toast")[0].cloneNode(true);
+        toastDiv.id = "toast-"+toastCtr;
+        toastCtr++;
+        document.getElementsByClassName('toast-container')[0].appendChild(toastDiv);
+        const toast = new bootstrap.Toast(toastDiv);
         toast.show();
-        gameStatusHandler(content);
+
+        gameStatusHandler("["+timestamp+"] "+content);
     }
 }
 
@@ -200,15 +209,6 @@ let UserActions = {
     'end_game': 'Żądanie zakończenia rozgrywki wysłane.',
     'stop_robot': 'Żądanie wstrzymania ruchu robota wysłane.',
     'resume_robot': 'Żądanie wznowienia ruchu ramienia wysłane.'
-}
-
-var toastTrigger = document.getElementById("liveToastBtn");
-var toastLiveExample = document.getElementById("liveToast");
-if (toastTrigger) {
-    toastTrigger.addEventListener("click", function () {
-        var toast = new bootstrap.Toast(toastLiveExample);
-        toast.show();
-    });
 }
 
 function sendUserAction(type) {

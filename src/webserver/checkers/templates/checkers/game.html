@@ -64,7 +64,7 @@
                 <span>Tura:</span><h4>0</h4>
               </div>
               <div class="whos-move mt-3">
-                <span>Kto wykonuje ruch?</span><h4>Gracz</h4>
+                <span>Kto wykonuje ruch?</span><h4></h4>
               </div>
             </div>
   
@@ -76,7 +76,7 @@
               <h4 class="pt-2 ps-4">Rejestr zdarzeń</h4>
               </div>
               <div class="card content scrollbar">
-                <div class="card-body"></div>
+                <div class="card-body pe-0"></div>
               </div>
               <h5 class="col-12 pt-2 ps-4">Ostatni status</h5>
               <div class="last-status card">
@@ -93,15 +93,22 @@
       </div>
   
       <!-- START Toast -->
-      <div class="position-fixed top-0 start-0 p-3" style="z-index: 11">
-        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-          <div class="attention toast-header">
-            <strong class="me-auto text-white">UWAGA</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-          </div>
-          <div class="toast-body"></div>
+      <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="attention toast-header">
+          <strong class="me-auto text-white toast-timestamp">UWAGA</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
+        <div class="toast-body"></div>
       </div>
+
+      <div class="toast-container position-absolute top-0 start-0 p-3" style="z-index: 11">
+
+      </div>
+
+      <!-- <div class="position-fixed top-0 start-0 p-3" style="z-index: 11">
+        <div class="toast-container">          
+        </div>
+      </div> -->
       <!-- END Toast -->
   
       <footer>
@@ -126,7 +133,7 @@
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn gray_outline" data-bs-dismiss="modal">Anuluj</button>
-                <button type="button" class="btn btn-secondary" onclick="window.location.href='/'">Tak, chce zakończyć</button>
+                <button type="button" class="btn btn-secondary" onclick="sendUserAction('end_game');window.location.href='/'">Tak, chce zakończyć</button>
               </div>
           </div>
           </div>
