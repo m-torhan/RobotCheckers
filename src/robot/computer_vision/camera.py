@@ -141,7 +141,7 @@ class CameraHandler(object):
         free_figures = {}
 
         for color, code in camera_config.pawns_colors_code.items():
-            free_figures[color] = []
+            free_figures[code] = []
             for x, y in objects_positions[color]:
                 pawn_on_board = False
                 if -.25 <= x <= 8.25 and\
@@ -160,7 +160,7 @@ class CameraHandler(object):
                                     board_pos[i, j, 1] = y
                                
                 if not pawn_on_board:
-                    free_figures[color].append((x, y))
+                    free_figures[code].append((x, y))
 
         return board_code, board_pos, free_figures, len(objects_positions['hand']) > 0
     

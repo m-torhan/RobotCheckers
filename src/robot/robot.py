@@ -247,9 +247,9 @@ class RobotCheckers(object):
                                                                  *self.__cam_pos_to_drv_pos(free_pos))
 
             if self.__checkers.player_turn == 0:
-                queen_pos = free_figures['blue'][0]
+                queen_pos = free_figures[2][0]
             else:
-                queen_pos = free_figures['red'][0]
+                queen_pos = free_figures[4][0]
 
             self.__movement_handler.move_pawn_from_pos_to_square(*self.__cam_pos_to_drv_pos(queen_pos),
                                                                  *move.dest)
@@ -299,14 +299,26 @@ class RobotCheckers(object):
         while not self.__movement_handler.all_done and self.__run:
             time.sleep(.1)
 
+        needed_figures = {}
+
+        for i in range(1, 5):
+            needed_figures[i] = (self.__checkers.board == i).sum()
+
         while self.__run:
+            time.sleep(.1)
             board_code, board_pos, free_figures, hand_above_board = self.__camera_handler.read_board()
             
             if not hand_above_board:
                 if timer is None:
                     timer = time.perf_counter()
                 elif time.perf_counter() - timer > 5:
-                    break
+                    all_needed_figures_available = True
+                    for i in range(1, 5):
+                        if needed_figures[i] > free_figures[i]:
+                            all_needed_figures_available = False
+                            break
+                    if all_needed_figures_available:
+                        break
 
             else:
                 timer = None
@@ -329,7 +341,7 @@ class RobotCheckers(object):
                         to_remove.append(self.__cam_pos_to_drv_pos(board_pos[x, y]))
 
                     if target != 0:
-                        free_figure_pos = free_figures[camera_config.pawns_code_colors[target]][free_figures_indices[target - 1]]
+                        free_figure_pos = free_figures[target][free_figures_indices[target - 1]]
                         to_move.append((*self.__cam_pos_to_drv_pos(free_figure_pos), x, y))
 
                         free_figures_indices[target - 1] += 1
