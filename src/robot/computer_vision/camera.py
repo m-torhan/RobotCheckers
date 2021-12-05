@@ -144,8 +144,8 @@ class CameraHandler(object):
             free_figures[color] = []
             for x, y in objects_positions[color]:
                 pawn_on_board = False
-                if -.5 < x < 7.5 and\
-                   -.5 < y < 7.5:
+                if -.25 <= x <= 8.25 and\
+                   -.25 <= y <= 8.25:
                     for i in range(max(0, int(x) - 1), min(8, int(x) + 2)):
                         for j in range(max(0, int(y) - 1), min(8, int(y) + 2)):
                             if (i + j) % 2 == 1:
@@ -383,8 +383,13 @@ class CameraHandler(object):
                 pass
 
         stream_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-
-        stream_socket.bind((ip_address, 8089))
+        for i in range(8089, 8089 + 20):
+            try:
+                stream_socket.bind((ip_address, i))
+                print(f"camera debug socket {i}")
+                break
+            except:
+                pass
         stream_socket.listen(10)
         stream_socket.settimeout(1)
 
