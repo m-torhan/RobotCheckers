@@ -77,7 +77,7 @@ class Game:
 
     def send_game_status(self, game_status: GameStatus, content: str = ''):
         if self.is_consumer_set():
-            self.__consumer.group_send_game_status(game_status, content)
+            self.__consumer.group_send_game_status(game_status, game_status.name) #debug game_status.name, else content
 
     def __cleanup(self):
         self.__settings.clear_all()
@@ -91,7 +91,7 @@ class Game:
                 break
             else:
                 try_counter += 1
-                if try_counter % 10:
+                if try_counter % 10 == 0:
                     self.send_game_status(GameStatus.BOARD_COULD_NOT_BE_CALIBRATED_BY_CV)
                 sleep(0.5)
         self.send_game_status(GameStatus.CALIBRATION_FINISHED)
