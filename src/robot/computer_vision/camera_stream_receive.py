@@ -6,10 +6,18 @@ import numpy as np
 import struct ## new
 
 HOST = '192.168.1.23'
+PORT = 8090
 
 stream_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-stream_socket.connect((HOST, 8089))
+if len(sys.argv) == 2:
+    print(sys.argv[1])
+    try:        
+        PORT = int(sys.argv[1])
+    except:
+        print('Incorrect PORT, trying on 8090')        
+
+stream_socket.connect((HOST, PORT))
 
 data = bytes()
 payload_size = struct.calcsize('L') 

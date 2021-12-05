@@ -95,7 +95,7 @@ input[type="range"]::-moz-range-progress {
   margin: 10%;
   height: 80%;
   width: 80%;
-  z-index: 50;
+  z-index: 9;
   background-color: black;
   -webkit-mask: url(../resources/img/circle.svg) no-repeat center;
   mask: url(../resources/img/circle.svg) no-repeat center;
@@ -130,7 +130,7 @@ input[type="range"]::-moz-range-progress {
 
 .animate-move {
   transition: transform 1s linear;
-  z-index: 501;
+  z-index: 10;
 }
 
 .fader {
