@@ -63,10 +63,10 @@ class GameConsumer(WebsocketConsumer):
             {
                 'type': 'move',
                 'message': {
-                    "id": move_id,
+                    "id": int(move_id),
                     "new_board_status": playable_fields_status,
-                    "move_steps": [{"x": x, "y": y} for (x, y) in move_steps],
-                    "taken_pawns": [{"x": x, "y": y} for (x, y) in taken_pawns]
+                    "move_steps": [{"x": int(x), "y": int(y)} for (x, y) in move_steps],
+                    "taken_pawns": [{"x": int(x), "y": int(y)} for (x, y) in taken_pawns]
                 }
             }
         )
@@ -86,6 +86,7 @@ class GameConsumer(WebsocketConsumer):
     def move(self, event):
         message_type = event['type']
         message_content = event['message']
+        # print(f"message content: {message_content}")
         self.send_message(message_type, message_content)
 
     # Receive message from group
