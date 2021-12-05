@@ -50,12 +50,7 @@ class RobotCheckers(object):
     def board_from_checkers(self):
         if self.__checkers is None or self.__ai_player is None:
             return None
-
-        # not sure when board should be roated 180 - TODO check it
-        if self.__ai_player.num == 0:
-            return self.__checkers.board
-        else:
-            return np.rot90(self.__checkers.board, 2)
+        return self.__checkers.board
     
     @property
     def board_from_camera(self):
@@ -123,7 +118,7 @@ class RobotCheckers(object):
         self.__movement_handler.stop()
 
     def initialize_game(self, robot_color, difficulty, board=None, turn=None):
-        self.__checkers = Checkers(board, turn)
+        self.__checkers = Checkers(robot_color, board, turn)
 
         if difficulty == 1:
             # random

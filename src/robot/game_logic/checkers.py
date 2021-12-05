@@ -1,7 +1,7 @@
 import numpy as np
 
 class Checkers(object):
-    def __init__(self, board=None, turn=None):
+    def __init__(self, robot_color, board=None, turn=None):
         self.__end = False
         self.__player_turn = 0
         self.__board = np.zeros((8, 8), dtype=np.uint8)
@@ -17,9 +17,9 @@ class Checkers(object):
                 for j in range(8):
                     if (i + j) % 2 == 1:
                         if j <= 2:
-                            self.__board[i, j] = 1
+                            self.__board[i, j] = self.__color_to_pawn(robot_color)
                         elif j >= 5:
-                            self.__board[i, j] = 3
+                            self.__board[i, j] = self.__color_to_pawn(self.opponent(robot_color))
         
         if turn is not None:
             self.__player_turn = turn
@@ -432,6 +432,20 @@ class Checkers(object):
         if pawn == 0:
             return pawn
         return pawn + 1
+
+    @staticmethod
+    def __color_to_pawn(color):
+        if color == 0:
+            return 1
+        if color == 1:
+            return 3
+
+    @staticmethod
+    def __color_to_queen(color):
+        if color == 0:
+            return 2
+        if color == 1:
+            return 4
 
 class Move(object):
     def __init__(self, chain, taken_figures):
