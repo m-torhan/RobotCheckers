@@ -102,6 +102,12 @@ class RobotCheckers(object):
             return self.__checkers.end
         return None
     
+    @property
+    def queens_moves_to_draw(self):
+        if self.__checkers is not None:
+            return self.__checkers.queens_moves_to_draw(self)
+        return None
+    
     def start(self):
         self.__movement_handler.start()
         self.__camera_handler.start()

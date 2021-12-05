@@ -48,6 +48,10 @@ class Checkers(object):
     def turn_counter(self):
         return self.__turn_counter
     
+    @property
+    def queens_moves_to_draw(self):
+        return (15 - self.__no_taking_queen_moves[0], 15 - self.__no_taking_queen_moves[1])
+    
     def copy(self):
         checkers_copy = Checkers(self.__board.copy())
         checkers_copy.__player_turn = self.__player_turn
