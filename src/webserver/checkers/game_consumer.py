@@ -3,7 +3,6 @@ import json
 import numpy as np
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
-from channels.layers import get_channel_layer
 from typing import List, Tuple
 
 from webserver.checkers.common.consts import GROUP_NAME
@@ -20,19 +19,16 @@ class GameConsumer(WebsocketConsumer):
         self._game: Game = Game.instance()
         self._game.consumer = self
 
-    def game(self):
-        channel_layer = get_channel_layer()
-        while channel_layer is None or self._group_name not in channel_layer.groups:
-            channel_layer = get_channel_layer()
-
     def connect(self):
         async_to_sync(self.channel_layer.group_add)(
             self._group_name,
             self.channel_name
         )
-
         self.accept()
+
         self._game.send_game_board_status()
+        self._game.start_game()
+
 
     def disconnect(self, close_code):
         async_to_sync(self.channel_layer.group_discard)(
@@ -67,10 +63,10 @@ class GameConsumer(WebsocketConsumer):
             {
                 'type': 'move',
                 'message': {
-                    "id": move_id,
+                    "id": int(move_id),
                     "new_board_status": playable_fields_status,
-                    "move_steps": [{"x": x, "y": y} for (x, y) in move_steps],
-                    "taken_pawns": [{"x": x, "y": y} for (x, y) in taken_pawns]
+                    "move_steps": [{"x": int(x), "y": int(y)} for (x, y) in move_steps],
+                    "taken_pawns": [{"x": int(x), "y": int(y)} for (x, y) in taken_pawns]
                 }
             }
         )
@@ -79,13 +75,6 @@ class GameConsumer(WebsocketConsumer):
         async_to_sync(self.channel_layer.group_send)(
             self._group_name, message
         )
-
-    # Receive message from group
-    def settings(self, event):
-        message_content = event['message']
-        if not self._game.is_game_running():
-            self._game.settings = message_content
-            self._game.start_game()
 
     # Receive message from group
     def game_status(self, event):
@@ -97,6 +86,7 @@ class GameConsumer(WebsocketConsumer):
     def move(self, event):
         message_type = event['type']
         message_content = event['message']
+        # print(f"message content: {message_content}")
         self.send_message(message_type, message_content)
 
     # Receive message from group

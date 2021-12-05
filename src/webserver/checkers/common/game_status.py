@@ -6,7 +6,8 @@ from webserver.checkers.common.extended_enum import ExtendedEnum
 class GameStatus(ExtendedEnum):
     BOARD_PREPARATION_STARTED = auto()
     BOARD_COULD_NOT_BE_CALIBRATED_BY_CV = auto()
-    BOARD_PREPARATION_ENDED = auto()
+    CALIBRATION_FINISHED = auto()
+    BOARD_PREPARATION_FINISHED = auto()
     READY_TO_PLAY = auto()
     ROBOTS_MOVE_STARTED = auto()
     ROBOTS_MOVE_ENDED = auto()

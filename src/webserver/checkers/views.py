@@ -1,14 +1,10 @@
 import json
-import threading
-import time
 import urllib.parse
 
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
-from webserver.checkers.common.consts import GROUP_NAME
+from webserver.checkers.game import Game
 from webserver.checkers.serializers import GameSettingsSerializer
 
 settings_thread = None
@@ -21,6 +17,9 @@ def index(request):
 
 
 def game(request):
+    if not Game.instance().settings.are_set():
+        return redirect('index')
+
     return render(request, 'checkers/game.html')
 
 
@@ -36,39 +35,12 @@ def settings(request):
     if not serializer.is_valid():
         return redirect_params('index', {'status': 'settings-validation-failed'})
 
-    if settings_thread is not None and settings_thread.is_alive():
+    game_instance = Game.instance()
+    if game_instance.settings.are_set():
         return redirect_params('index', {'status': 'settings-already-set'})
 
-    settings_thread = threading.Thread(target=channel_send_settings, args=(serializer.validated_data,),
-                                       kwargs={})
-    settings_thread.start()
+    game_instance.settings.map_settings_from_dict(serializer.validated_data)
     return redirect('game')
-
-
-def channel_send_settings(game_settings: dict):
-    max_tries = 10
-    group_exists = False
-
-    while True:
-        channel_layer = get_channel_layer()
-        if channel_layer is not None and GROUP_NAME in channel_layer.groups:
-            group_exists = True
-            break
-
-        if max_tries == 0:
-            break
-
-        time.sleep(1)
-        max_tries -= 1
-
-    if group_exists:
-        async_to_sync(channel_layer.group_send)(
-            GROUP_NAME,
-            {
-                'type': 'settings',
-                'message': game_settings
-            }
-        )
 
 
 def redirect_params(url, params=None):
