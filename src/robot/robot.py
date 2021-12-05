@@ -317,7 +317,7 @@ class RobotCheckers(object):
                 elif time.perf_counter() - timer > 5:
                     all_needed_figures_available = True
                     for i in range(1, 5):
-                        if needed_figures[i] > free_figures[i]:
+                        if needed_figures[i] > len(free_figures[i]):
                             all_needed_figures_available = False
                             break
                     if all_needed_figures_available:
