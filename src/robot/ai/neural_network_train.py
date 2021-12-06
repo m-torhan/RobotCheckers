@@ -20,7 +20,7 @@ window_height = 512
 generation_size = 100
 top_rate = .2
 mutation_rate = .05
-duels_per_generation = 4
+duels_per_generation = 8
 eval_duels = 50
 
 def sigmoid(x):
@@ -54,7 +54,7 @@ class AIPlayerNeuralNetworkGenetic(object):
     def __init__(self):
         self.num = 0
         self.__model_input_shape = (8, 8, 4)
-        model_arch = [(0, 4)] + [(3, 8)]*8
+        model_arch = [(0, 4), (5, 16), (5, 16), (5, 8), (5, 8), (5, 4), (5, 4), (5, 2)]
         self.__kernels = [np.random.normal(size=(model_arch[i][0],
                                                  model_arch[i][0],
                                                  model_arch[i - 1][1],
@@ -202,7 +202,7 @@ def train_fun():
             for i, (player_1_idx, player_2_idx) in enumerate(pairs):
                 print(f'\r{generation_num} {d + 1}/{duels_per_generation}  {i + 1}/{len(pairs)}  ', end='')
 
-                checkers = Checkers()
+                checkers = Checkers(0)
 
                 player_1 = generation[player_1_idx][1]
                 player_2 = generation[player_2_idx][1]
@@ -242,7 +242,7 @@ def train_fun():
         player_2_layers = []
         score_rand = 0
         for _ in range(eval_duels):
-            checkers = Checkers()
+            checkers = Checkers(0)
 
             r = random.getrandbits(1)
             player_1 = generation[0][1]
@@ -270,7 +270,7 @@ def train_fun():
         player_2_layers = []
         score_ab = 0
         for _ in range(eval_duels):
-            checkers = Checkers()
+            checkers = Checkers(0)
 
             r = random.getrandbits(1)
             player_1 = generation[0][1]
@@ -295,7 +295,7 @@ def train_fun():
 
         print(f' score (vs ab): {score_ab/eval_duels:.4f}')
 
-        generation[0][1].save_network(f'./neural_networks/gen_{generation_num}_{score_rand/eval_duels:.3f}_{score_ab/eval_duels:.3f}/'.replace('.', '_'))
+        generation[0][1].save_network(f'./neural_networks/gen_{generation_num}_{score_rand/eval_duels:.3f}_{score_ab/eval_duels:.3f}/')
 
         # remove worst
         generation = generation[:int(len(generation)*top_rate)]
@@ -403,7 +403,7 @@ while run:
 
     x_offset = 256
     y_offset = 256
-    if player_2_layers is not None:
+    if 0 and player_2_layers is not None:
         for layer in player_2_layers:
             for k in range(layer.shape[2]):
                 for i in range(layer.shape[1]):

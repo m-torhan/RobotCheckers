@@ -2,6 +2,7 @@ import numpy as np
 
 class Checkers(object):
     def __init__(self, robot_color, board=None, turn=None):
+        self.__robot_color = robot_color
         self.__end = False
         self.__player_turn = 0
         self.__board = np.zeros((8, 8), dtype=np.uint8)
@@ -53,7 +54,7 @@ class Checkers(object):
         return (15 - self.__no_taking_queen_moves[0], 15 - self.__no_taking_queen_moves[1])
     
     def copy(self):
-        checkers_copy = Checkers(self.__board.copy())
+        checkers_copy = Checkers(self.__robot_color, self.__board.copy())
         checkers_copy.__player_turn = self.__player_turn
 
         return checkers_copy
