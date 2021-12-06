@@ -108,7 +108,9 @@ class Game:
                                     0 if self.__settings.start_mode == StartMode.ROBOT else 1)
 
                 self.send_game_status(GameStatus.BOARD_PREPARATION_STARTED)
-                self.__robot.initialize_game(start_states[1], self.__settings.difficulty)
+                self.__robot.initialize_game(start_states[1],
+                                             self.__settings.difficulty,
+                                             self.__settings.automatic_pawns_placement_on_start)
                 self.send_game_status(GameStatus.BOARD_PREPARATION_FINISHED)
 
                 self.send_game_status(
