@@ -26,6 +26,7 @@ class RobotCheckers(object):
         self.__robot_thread = threading.Thread(target=self.__robot_handler)
 
         self.__checkers = None
+        self.__robot_color = None
         self.__ai_player = None
         self.__play = False
         self.__game_initialized = False
@@ -118,6 +119,8 @@ class RobotCheckers(object):
         self.__movement_handler.stop()
 
     def initialize_game(self, robot_color, difficulty, automatic_pawns_placement_on_start=True, board=None, turn=None):
+        self.__robot_color = robot_color
+
         self.__checkers = Checkers(robot_color, board, turn)
 
         if difficulty == 1:
@@ -250,7 +253,7 @@ class RobotCheckers(object):
             self.__movement_handler.move_pawn_from_square_to_pos(*move.dest,
                                                                  *self.__cam_pos_to_drv_pos(free_pos))
 
-            if self.__checkers.player_turn == 0:
+            if self.__robot_color == 0:
                 queen_pos = free_figures[2][0]
             else:
                 queen_pos = free_figures[4][0]
