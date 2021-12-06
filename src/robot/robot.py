@@ -117,7 +117,7 @@ class RobotCheckers(object):
         self.__camera_handler.stop()
         self.__movement_handler.stop()
 
-    def initialize_game(self, robot_color, difficulty, board=None, turn=None):
+    def initialize_game(self, robot_color, difficulty, automatic_pawns_placement_on_start=True, board=None, turn=None):
         self.__checkers = Checkers(robot_color, board, turn)
 
         if difficulty == 1:
@@ -134,7 +134,8 @@ class RobotCheckers(object):
             self.__ai_player = AIPlayerMinimax(robot_color, difficulty - 3)
 
         # board preparation
-        self.__prepare_board()
+        if automatic_pawns_placement_on_start:
+            self.__prepare_board()
     
     def start_game(self):
         if self.__checkers is not None:
