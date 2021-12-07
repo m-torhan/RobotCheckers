@@ -70,7 +70,7 @@ class CameraHandler(object):
             [y_min, y_min + (y_max - y_min)*camera_config.gamearea_size[1]//camera_config.board_size[1]]
         ]
 
-        self.__bottom_right_corner = (x_max + xy_delta//8, y_max + xy_delta//8)
+        self.__bottom_right_corner = (x_max, y_max)
 
         # kernel used in free space detection
         kernel_diameter = self.__sq_side*5//4
@@ -208,8 +208,8 @@ class CameraHandler(object):
         w = np.where(free_area_mask_grad > .7)
         i = random.randint(0, w[0].shape[0] - 1)
 
-        x = self.__bottom_right_corner[0] - w[1][i]/self.__sq_side
-        y = self.__bottom_right_corner[1] - w[0][i]/self.__sq_side
+        x = (self.__bottom_right_corner[0] - w[1][i])/self.__sq_side
+        y = (self.__bottom_right_corner[1] - w[0][i])/self.__sq_side
         
         if debug or 0 != self.__debug_mode:
             free_area_mask_grad_rgb = cv2.cvtColor((255*free_area_mask_grad).astype(np.uint8), cv2.COLOR_GRAY2BGR)
@@ -247,8 +247,8 @@ class CameraHandler(object):
                 if (col != 'hand' and (self.__sq_side//2 < w < self.__sq_side and self.__sq_side//2 < h < self.__sq_side)) or\
                    (col == 'hand' and (w > self.__sq_side or h > self.__sq_side)):
                     objects_positions[col].append(
-                        ((self.__bottom_right_corner[0] - (x + w/2))/self.__sq_side - 1,
-                         (self.__bottom_right_corner[1] - (y + h/2))/self.__sq_side - 1)
+                        ((self.__bottom_right_corner[0] - (x + w/2))/self.__sq_side,
+                         (self.__bottom_right_corner[1] - (y + h/2))/self.__sq_side)
                     )
 
                     if 0 != self.__debug_mode:
