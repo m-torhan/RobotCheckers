@@ -100,15 +100,9 @@ class Game:
             if not self.__run:
                 sleep(1)
             else:
-                if self.__settings.start_mode == StartMode.RANDOM:
-                    r = random.getrandbits(1)
-                    start_states = (int(r == 0), int(r != 0))
-                else:
-                    start_states = (0 if self.__settings.start_mode == StartMode.PLAYER else 1,
-                                    0 if self.__settings.start_mode == StartMode.ROBOT else 1)
-
                 self.send_game_status(GameStatus.BOARD_PREPARATION_STARTED)
-                self.__robot.initialize_game(start_states[1],
+                self.send_game_board_status()
+                self.__robot.initialize_game(0 if self.__settings.start_mode == StartMode.ROBOT else 1,
                                              self.__settings.difficulty,
                                              self.__settings.automatic_pawns_placement_on_start)
                 self.send_game_status(GameStatus.BOARD_PREPARATION_FINISHED)
@@ -122,14 +116,14 @@ class Game:
                 self.__robot.start_game()
 
                 while not self.__robot.checkers_end and self.__run:
-                    if self.__robot.turn_counter != turn_ctr:
+                    if self.__robot.turn_counter != turn_ctr and self.__robot.move_done:
                         turn_ctr = self.__robot.turn_counter
                         self.send_game_board_status()
                         self.send_game_status(
                             GameStatus.PLAYERS_MOVE_STARTED if self.__robot.player_turn else
                             GameStatus.ROBOTS_MOVE_STARTED
                         )
-                    sleep(0.1)
+                    sleep(.1)
 
                 if self.__robot.checkers_end:
                     content = "Koniec gry, "

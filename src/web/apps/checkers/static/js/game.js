@@ -60,7 +60,7 @@ function initBoard() {
     }
     sessionStorage.setItem('whoMoves', 'Gracz');
     sessionStorage.setItem('toggleStartStopRobot', '0')
-};
+}
 
 // takes flatten string representing board and insert pawn on the right places
 function placePawns(board) {
@@ -82,7 +82,10 @@ function placePawns(board) {
                     pawn.classList.add("pawn", "red");
                     break;
             }
-            document.getElementById("gameboard").getElementsByTagName("tr")[parseInt(index / 4)].children[parseInt(((index) % 4) * 2 + ((index / 4 + 1) % 2))].appendChild(pawn);
+            document.getElementById("gameboard")
+                .getElementsByTagName("tr")[parseInt(index / 4)]
+                .children[parseInt(((index) % 4) * 2 + ((index / 4 + 1) % 2))]
+                .appendChild(pawn);
         }
     }
 }
@@ -113,8 +116,8 @@ function sleep(ms) {
 function updateTakenPawnsCount(status_board){
     const whiteCtr = status_board.split( '' ).filter( c => c === '1' || c === '2' ).length;
     const blackCtr = status_board.split( '' ).filter( c => c === '3' || c === '4' ).length;
-    document.getElementById('taken-white').innerText = 12 - whiteCtr;
-    document.getElementById('taken-black').innerText = 12 - blackCtr;
+    document.getElementById('taken-white').innerText = (12 - whiteCtr).toString();
+    document.getElementById('taken-black').innerText = (12 - blackCtr).toString();
 }
 
 async function movePawn(move_list, output_board, taken_pawns) {
@@ -128,18 +131,23 @@ async function movePawn(move_list, output_board, taken_pawns) {
                 x += move_list[i + 1]["x"] - move_list[i]["x"];
                 y += move_list[i + 1]["y"] - move_list[i]["y"];
 
-                document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0].classList.add("animate-move");
-                document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0].style.transform =
-                    "translate(" + (x) * 125 + "%," + (y) * 125 + "%)";
+                document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]]
+                    .children[0].classList.add("animate-move");
+                document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]]
+                    .children[0].style.transform = "translate(" + (x) * 125 + "%," + (y) * 125 + "%)";
 
-                addEventToRegister(`${sessionStorage.getItem('whoMoves')} wykonał ruch z pola (${move_list[i]["x"]},${move_list[i]["y"]}) do (${move_list[i + 1]["x"]},${move_list[i + 1]["y"]})`);
+                addEventToRegister(
+                    `${sessionStorage.getItem('whoMoves')} wykonał ruch z pola (${move_list[i]["x"]},
+                    ${move_list[i]["y"]}) do (${move_list[i + 1]["x"]},${move_list[i + 1]["y"]})`);
 
                 await sleep(1000);
             }
 
             // promote pawns
-            if (move_list.length !== 0 && (move_list[move_list.length - 1]['y'] === 0 || move_list[move_list.length - 1]['y'] === 7)) {
-                const pawn = document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]].children[0];
+            if (move_list.length !== 0 &&
+                (move_list[move_list.length - 1]['y'] === 0 || move_list[move_list.length - 1]['y'] === 7)) {
+                const pawn = document.getElementsByTagName("td")[move_list[0]["y"] * 8 + move_list[0]["x"]]
+                    .children[0];
                 if (pawn.classList.contains('white')) {
                     pawn.classList.remove('white');
                     pawn.classList.add('promotion')
@@ -155,7 +163,8 @@ async function movePawn(move_list, output_board, taken_pawns) {
             // fade away taken pawns
             for (let index = 0; index < taken_pawns.length; index++) {
                 const element = taken_pawns[index];
-                document.getElementsByTagName("td")[element["y"] * 8 + element["x"]].children[0].classList.add("fader");
+                document.getElementsByTagName("td")[element["y"] * 8 + element["x"]]
+                    .children[0].classList.add("fader");
             }
             await sleep(1000);
         }

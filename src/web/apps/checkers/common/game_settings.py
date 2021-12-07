@@ -1,5 +1,5 @@
 from web.apps.checkers.common.start_mode import StartMode
-
+import random
 
 class GameSettings:
     __automatic_pawns_placement_on_start: bool
@@ -14,7 +14,11 @@ class GameSettings:
     def map_settings_from_dict(self, settings_dict):
         self.__automatic_pawns_placement_on_start = settings_dict['automatic_pawns_placement_on_start']
         self.__difficulty = settings_dict['difficulty']
-        self.__start_mode = StartMode(settings_dict['start_mode'])
+        if StartMode(settings_dict['start_mode']) == StartMode.RANDOM:
+            r = random.getrandbits(1)
+            self.__start_mode = StartMode.ROBOT if r == 0 else StartMode.PLAYER
+        else:
+            self.__start_mode = StartMode(settings_dict['start_mode'])
 
     def clear_all(self):
         self.__automatic_pawns_placement_on_start = None

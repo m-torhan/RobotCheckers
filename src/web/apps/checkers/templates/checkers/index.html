@@ -81,6 +81,14 @@
                             <input type="range" class="form-range" min="1" max="10" id="difficulty" name="difficulty" value=2>
                             <div id="difficulty-label">MonteCarlo 1</div>                            
                         </div>
+
+                        <div class="col-md-10 row-option">
+                            <div class="col-12 mb-2">Kto rozkłada pionki przed rozpoczeciem gry?</div>
+                            <input type="radio" class="btn-check" name="automatic_pawns_placement_on_start" id="success-outlined-p" autocomplete="on" value="True" checked>
+                            <label class="btn gray_outline me-2" for="success-outlined-p">Robot</label>
+                            <input type="radio" class="btn-check" name="automatic_pawns_placement_on_start" id="danger-outlined-p" autocomplete="off" value="False">
+                            <label class="btn gray_outline me-2" for="danger-outlined-p">Gracz</label>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
