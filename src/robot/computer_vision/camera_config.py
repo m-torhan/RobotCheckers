@@ -2,10 +2,12 @@ board_size    = (24, 24)    # [cm]
 gamearea_size = (40, 34)
 
 pawns_colors_code = {
-    'white': 1,
-    'blue' : 2,
+    # order means priority if two pawns are detected on the same field
+    # white has highest priority, black lowest one
     'black': 3,
-    'red'  : 4
+    'blue' : 2,
+    'red'  : 4,
+    'white': 1
 }
 
 pawns_code_colors = {

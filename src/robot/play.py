@@ -26,7 +26,7 @@ while not robotCheckers.calibrated:
 print('Robot calibrated')
 
 robot_num = int(random.getrandbits(1) == 0)
-robotCheckers.initialize_game(robot_num, level)
+robotCheckers.initialize_game(robot_num, level, False)
 print(f'Game iniitialized, level={level}')
 
 robotCheckers.start_game()
