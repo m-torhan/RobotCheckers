@@ -108,9 +108,14 @@ class Game:
                                     0 if self.__settings.start_mode == StartMode.ROBOT else 1)
 
                 self.send_game_status(GameStatus.BOARD_PREPARATION_STARTED)
+
                 self.__robot.initialize_game(start_states[1],
                                              self.__settings.difficulty,
                                              self.__settings.automatic_pawns_placement_on_start)
+                # Temporary W/A for placing pawns
+                if not self.__settings.automatic_pawns_placement_on_start:
+                    sleep(20)
+
                 self.send_game_status(GameStatus.BOARD_PREPARATION_FINISHED)
 
                 self.send_game_status(
@@ -125,11 +130,12 @@ class Game:
                     if self.__robot.turn_counter != turn_ctr:
                         turn_ctr = self.__robot.turn_counter
                         self.send_game_board_status()
+                        sleep(1.5)
                         self.send_game_status(
                             GameStatus.PLAYERS_MOVE_STARTED if self.__robot.player_turn else
                             GameStatus.ROBOTS_MOVE_STARTED
                         )
-                    sleep(0.1)
+                    sleep(0.3)
 
                 if self.__robot.checkers_end:
                     content = "Koniec gry, "

@@ -247,8 +247,8 @@ class CameraHandler(object):
                 if (col != 'hand' and (self.__sq_side//2 < w < self.__sq_side and self.__sq_side//2 < h < self.__sq_side)) or\
                    (col == 'hand' and (w > self.__sq_side or h > self.__sq_side)):
                     objects_positions[col].append(
-                        ((self.__bottom_right_corner[0] - (x + w/2))/self.__sq_side,
-                         (self.__bottom_right_corner[1] - (y + h/2))/self.__sq_side)
+                        ((self.__bottom_right_corner[0] - (x + w/2))/self.__sq_side - 1,
+                         (self.__bottom_right_corner[1] - (y + h/2))/self.__sq_side - 1)
                     )
 
                     if 0 != self.__debug_mode:
@@ -398,7 +398,7 @@ class CameraHandler(object):
                 conn, _ = stream_socket.accept()
 
                 while self.__run:
-                    time.sleep(.01)
+                    time.sleep(.1)
                     try:
                         frame = self.read_debug_frame()
 
