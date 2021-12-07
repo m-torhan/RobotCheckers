@@ -4,9 +4,10 @@ function sendSettings() {
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify({
         'difficulty': document.getElementById("difficulty").value,
-        'start_mode': document.querySelector('input[name="start_mode"]:checked').value
+        'start_mode': document.querySelector('input[name="start_mode"]:checked').value,
+        'automatic_pawns_placement_on_start': document.querySelector('input[name="automatic_pawns_placement_on_start"]:checked').value
     }));
-    if(xhr.status == 200){
+    if(xhr.status === 200){
         window.location = xhr.responseURL
     }
 }

@@ -30,6 +30,7 @@ class RobotCheckers(object):
         self.__ai_player = None
         self.__play = False
         self.__game_initialized = False
+        self.__move_done = True
 
         self.__player_move_valid = True
         self.__robot_arm_moving = False
@@ -68,6 +69,10 @@ class RobotCheckers(object):
         if self.__checkers is not None:
             return self.__checkers.turn_counter
         return None
+
+    @property
+    def move_done(self):
+        return self.__move_done
     
     @property
     def winner(self):
@@ -138,12 +143,18 @@ class RobotCheckers(object):
 
         # board preparation
         if automatic_pawns_placement_on_start:
+            print('Robot will place pawns on board')
             self.__prepare_board()
         else:
-            # Temporary W/A, here will be detecting if player placed all pawns correctly
-            time.sleep(25)
+            print('Player had to place pawns on board')
+            while True:
+                if np.all(self.board_from_camera == self.board_from_checkers):
+                    break
+                time.sleep(.5)
+        print('Board prepared to start game')
     
     def start_game(self):
+        print('Game started')
         if self.__checkers is not None:
             self.__play = True
         
@@ -173,8 +184,10 @@ class RobotCheckers(object):
                 if self.__checkers is None:
                     break
                 if self.__checkers is not None and self.__checkers.player_turn == self.__ai_player.num:
+                    self.__move_done = False
                     robot_move, _, promoted = self.__ai_player.make_move(self.__checkers)
                     self.__make_move(robot_move, promoted)
+                    self.__move_done = True
                 else:
                     player_move = self.__get_player_move()
 
