@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from webserver.checkers.common.start_mode import StartMode
+from web.apps.checkers.common.start_mode import StartMode
 
 
 class GameSettingsSerializer(serializers.Serializer):

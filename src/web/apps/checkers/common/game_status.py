@@ -1,6 +1,6 @@
 from enum import auto
 
-from webserver.checkers.common.extended_enum import ExtendedEnum
+from web.apps.checkers.common.extended_enum import ExtendedEnum
 
 
 class GameStatus(ExtendedEnum):

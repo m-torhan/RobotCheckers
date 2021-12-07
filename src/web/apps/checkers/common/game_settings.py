@@ -1,4 +1,4 @@
-from webserver.checkers.common.start_mode import StartMode
+from web.apps.checkers.common.start_mode import StartMode
 
 
 class GameSettings:

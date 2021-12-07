@@ -1,4 +1,4 @@
-from webserver.checkers.common.extended_enum import ExtendedEnum
+from web.apps.checkers.common.extended_enum import ExtendedEnum
 
 
 class Winner(ExtendedEnum):

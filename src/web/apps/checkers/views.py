@@ -4,8 +4,8 @@ import urllib.parse
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 
-from webserver.checkers.game import Game
-from webserver.checkers.serializers import GameSettingsSerializer
+from web.apps.checkers.game import Game
+from web.apps.checkers.serializers import GameSettingsSerializer
 
 settings_thread = None
 
