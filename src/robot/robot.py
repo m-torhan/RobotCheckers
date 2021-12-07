@@ -12,10 +12,10 @@ import threading
 import numpy as np
 import time
 
-from src.robot.ai.ai_player import *
-from src.robot.computer_vision.camera import CameraHandler, camera_config
-from src.robot.game_logic.checkers import Checkers, Move
-from src.robot.movement.driver import MovementHandler, driver_config
+from robot.ai.ai_player import *
+from robot.computer_vision.camera import CameraHandler, camera_config
+from robot.game_logic.checkers import Checkers, Move
+from robot.movement.driver import MovementHandler, driver_config
 
 class RobotCheckers(object):
     def __init__(self, debug=0):
@@ -139,6 +139,9 @@ class RobotCheckers(object):
         # board preparation
         if automatic_pawns_placement_on_start:
             self.__prepare_board()
+        else:
+            # Temporary W/A, here will be detecting if player placed all pawns correctly
+            time.sleep(25)
     
     def start_game(self):
         if self.__checkers is not None:

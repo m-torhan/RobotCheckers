@@ -229,7 +229,7 @@ class Checkers(object):
                 # regular move
                 return True
 
-            y_dir = (1, -1)[self.__player_turn]
+            y_dir = (1, -1)[self.__player_turn ^ self.__robot_color]
             if abs(step_dest[0] - step_src[0]) == 2 and step_dest[1] - step_src[1] == 2*y_dir and\
                self.__figure_player(step_board[(step_src[0] + step_dest[0])//2, (step_src[1] + step_dest[1])//2]) == self.opponent():
                 # taking move
@@ -285,7 +285,7 @@ class Checkers(object):
 
         x, y = figure_pos
 
-        y_dir = (1, -1)[player]
+        y_dir = (1, -1)[player ^ self.__robot_color]
 
         available_moves = []
 
