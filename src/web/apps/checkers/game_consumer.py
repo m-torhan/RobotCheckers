@@ -5,11 +5,11 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from typing import List, Tuple
 
-from webserver.checkers.common.consts import GROUP_NAME
-from webserver.checkers.common.game_status import GameStatus
-from webserver.checkers.common.user_action import UserAction
-from webserver.checkers.common.utils import map_board_to_playable_fields_str
-from webserver.checkers.game import Game
+from web.apps.checkers.common.consts import GROUP_NAME
+from web.apps.checkers.common.game_status import GameStatus
+from web.apps.checkers.common.user_action import UserAction
+from web.apps.checkers.common.utils import map_board_to_playable_fields_str
+from web.apps.checkers.game import Game
 
 
 class GameConsumer(WebsocketConsumer):
@@ -28,7 +28,6 @@ class GameConsumer(WebsocketConsumer):
 
         self._game.send_game_board_status()
         self._game.start_game()
-
 
     def disconnect(self, close_code):
         async_to_sync(self.channel_layer.group_discard)(

@@ -12,10 +12,10 @@ import threading
 import numpy as np
 import time
 
-from ai.ai_player import *
-from computer_vision.camera import CameraHandler, camera_config
-from game_logic.checkers import Checkers, Move
-from movement.driver import MovementHandler, driver_config
+from src.robot.ai.ai_player import *
+from src.robot.computer_vision.camera import CameraHandler, camera_config
+from src.robot.game_logic.checkers import Checkers, Move
+from src.robot.movement.driver import MovementHandler, driver_config
 
 class RobotCheckers(object):
     def __init__(self, debug=0):

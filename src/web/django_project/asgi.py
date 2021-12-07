@@ -4,9 +4,9 @@ from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
 
-from webserver.checkers import routing
+from web.apps.checkers import routing
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "django_project.settings")
 
 application = ProtocolTypeRouter({
     "http": get_asgi_application(),

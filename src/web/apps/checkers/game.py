@@ -3,13 +3,13 @@ import random
 from time import sleep
 
 from robot.robot import RobotCheckers
-from webserver.checkers.common.consts import ROBOT_STARTS_BOARD, PLAYER_STARTS_BOARD
-from webserver.checkers.common.game_settings import GameSettings
-from webserver.checkers.common.game_status import GameStatus
-from webserver.checkers.common.singleton import Singleton
-from webserver.checkers.common.start_mode import StartMode
-from webserver.checkers.common.user_action import UserAction
-from webserver.checkers.common.winner import Winner
+from web.apps.checkers.common.consts import ROBOT_STARTS_BOARD, PLAYER_STARTS_BOARD
+from web.apps.checkers.common.game_settings import GameSettings
+from web.apps.checkers.common.game_status import GameStatus
+from web.apps.checkers.common.singleton import Singleton
+from web.apps.checkers.common.start_mode import StartMode
+from web.apps.checkers.common.user_action import UserAction
+from web.apps.checkers.common.winner import Winner
 
 
 @Singleton
