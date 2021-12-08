@@ -394,9 +394,9 @@ class MovementHandler(object):
                 endstop_triggered = 'y'
                 break
 
-            GPIO.output(motor_to_move, GPIO.HIGH)
+            GPIO.output(motor_pin, GPIO.HIGH)
             time.sleep(1./self.__speed)
-            GPIO.output(motor_to_move, GPIO.LOW)
+            GPIO.output(motor_pin, GPIO.LOW)
             time.sleep(1./self.__speed)
 
             steps_done[motor_to_move] += 1
@@ -406,13 +406,13 @@ class MovementHandler(object):
         
         if motor_to_move == 'A':
             if endstop_triggered == 'x':
-                dir_a = (-1, 1)[y < 0]
+                dir_a = (-1, 1)[y > 0]
             elif endstop_triggered == 'y':
                 dir_a = (-1, 1)[x > 0]
             GPIO.output(driver_config.pin_motor_B_dir, GPIO.HIGH if dir_a > 0 else GPIO.LOW)
         elif motor_to_move == 'B':
             if endstop_triggered == 'x':
-                dir_b = (-1, 1)[y > 0]
+                dir_b = (-1, 1)[y < 0]
             elif endstop_triggered == 'y':
                 dir_b = (-1, 1)[x > 0]
             GPIO.output(driver_config.pin_motor_A_dir, GPIO.HIGH if dir_b > 0 else GPIO.LOW)
@@ -445,8 +445,8 @@ class MovementHandler(object):
             self.__pos[1] += delta_y_done
 
         else:
-            self.__pos[0] = (0, self.__X_range)[x > 0]
-            self.__pos[1] = (0, self.__Y_range)[y > 0]
+            self.__pos[0] = self.__X_range[x > 0]
+            self.__pos[1] = self.__Y_range[y > 0]
     
     def __set_magnet_inner(self, state):
         GPIO.output(driver_config.pin_magnet, GPIO.HIGH if state else GPIO.LOW)

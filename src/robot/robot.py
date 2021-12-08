@@ -167,6 +167,7 @@ class RobotCheckers(object):
         # calibration
 
         self.__movement_handler.calibrate()
+        self.__movement_handler.move_to_corner(1, -1)
 
         while not (self.__camera_handler.initialized and self.__movement_handler.calibrated) and self.__run:
             # awaiting submodules calibration
@@ -278,7 +279,7 @@ class RobotCheckers(object):
                                                                  *move.dest)
         
         # move to corner
-        self.__movement_handler.move_to_pos(self.__movement_handler.X_range[1], self.__movement_handler.Y_range[0])
+        self.__movement_handler.move_to_corner(1, -1)
 
         time.sleep(1)
 
@@ -313,9 +314,6 @@ class RobotCheckers(object):
         
         interrupt_thread = threading.Thread(target=interrupt_thread_fun)
         interrupt_thread.start()
-        
-        # move to corner
-        self.__movement_handler.move_to_pos(self.__movement_handler.X_range[1], self.__movement_handler.Y_range[0])
 
         time.sleep(1)
 
@@ -379,7 +377,7 @@ class RobotCheckers(object):
         time.sleep(1)
 
         # move to corner
-        self.__movement_handler.move_to_pos(self.__movement_handler.X_range[1], self.__movement_handler.Y_range[0])
+        self.__movement_handler.move_to_corner(1, -1)
 
         time.sleep(1)
         

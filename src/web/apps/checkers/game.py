@@ -119,7 +119,6 @@ class Game:
                     if self.__robot.turn_counter != turn_ctr and self.__robot.move_done:
                         turn_ctr = self.__robot.turn_counter
                         self.send_game_board_status()
-                        sleep(1)
                         self.send_game_status(
                             GameStatus.PLAYERS_MOVE_STARTED if self.__robot.player_turn else
                             GameStatus.ROBOTS_MOVE_STARTED
