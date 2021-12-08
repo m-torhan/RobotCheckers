@@ -30,6 +30,9 @@ class AIPlayerRandom(__AIPlayer):
         ret, promoted = checkers.make_move(move)
         
         return move, ret, promoted
+    
+    def __repr__(self):
+        return 'AIPlayerRandom()'
         
 class AIPlayerAlphaBeta(__AIPlayer):
     def __init__(self, num, max_depth):
@@ -43,6 +46,9 @@ class AIPlayerAlphaBeta(__AIPlayer):
         
         return move, ret, promoted
 
+    def __repr__(self):
+        return f'AIPlayerAlphaBeta(depth={self.__max_depth})'
+
 class AIPlayerMinimax(__AIPlayer):
     def __init__(self, num, max_depth):
         super(AIPlayerMinimax, self).__init__(num)
@@ -54,6 +60,9 @@ class AIPlayerMinimax(__AIPlayer):
         ret, promoted = checkers.make_move(move)
         
         return move, ret, promoted
+
+    def __repr__(self):
+        return f'AIPlayerMinimax(depth={self.__max_depth})'
         
 class AIPlayerMonteCarlo(__AIPlayer):
     def __init__(self, num, simulations):
@@ -67,6 +76,9 @@ class AIPlayerMonteCarlo(__AIPlayer):
         
         return move, ret, promoted
 
+    def __repr__(self):
+        return f'AIPlayerMonteCarlo(simulations={self.__simulations})'
+
 class AIPlayerNeuralNetwork(__AIPlayer):
     def __init__(self, num, network_folder):
         super(AIPlayerNeuralNetwork, self).__init__(num)
@@ -78,3 +90,6 @@ class AIPlayerNeuralNetwork(__AIPlayer):
         ret, promoted = checkers.make_move(move)
         
         return move, ret, promoted
+        
+    def __repr__(self):
+        return 'AIPlayerNeuralNetwork()'
