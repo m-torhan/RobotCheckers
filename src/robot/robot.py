@@ -139,7 +139,7 @@ class RobotCheckers(object):
             self.__ai_player = AIPlayerMinimax(robot_color, difficulty - 3)
         else:
             # Alpha-beta with depth of 5, 6, 7
-            self.__ai_player = AIPlayerMinimax(robot_color, difficulty - 3)
+            self.__ai_player = AIPlayerAlphaBeta(robot_color, difficulty - 3)
 
         # board preparation
         if automatic_pawns_placement_on_start:

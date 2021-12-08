@@ -75,8 +75,8 @@ class Checkers(object):
 
         promoted = False
         if self.__figure_type(self.__board[move.dest]) == 0 and\
-           ((move.dest[1] == 0 and self.__player_turn == 1) or\
-            (move.dest[1] == 7 and self.__player_turn == 0)):
+           ((move.dest[1] == 0 and self.__player_turn ^ self.__robot_color == 1) or\
+            (move.dest[1] == 7 and self.__player_turn ^ self.__robot_color == 0)):
             self.__board[move.dest] = self.__promote_pawn_to_queen(self.__board[move.dest])
             promoted = True
 
