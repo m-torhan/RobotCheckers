@@ -23,7 +23,7 @@ webSocket.onmessage = function (e) {
     switch (message_type) {
         case 'game_status':
             updateWhosTurn(data.message.game_status);
-            addToast(data.message.content)
+            addToast(data.message.content!==''?status_dict[data.message.content]:data.message.game_status)
             break;
         case 'move':
             document.getElementsByClassName("turn")[0].children[1].innerHTML = data.message.id + 1;
@@ -234,4 +234,19 @@ function websocketConnectionStatus(){
         led.classList.value="badge bg-danger mb-2";
         led.innerText = 'Brak połączenia'
     }    
+}
+
+const status_dict = {
+    'BOARD_PREPARATION_STARTED': 'Rozpoczęto proces przygotowania planszy',
+    'BOARD_COULD_NOT_BE_CALIBRATED_BY_CV': 'Problem z kalibracją, sprawdź oświetlenie i zasilanie ramienia',
+    'CALIBRATION_FINISHED': 'Proces kalibracji zakończony sukcesem',
+    'BOARD_PREPARATION_FINISHED': 'Proces przygotowania planszy zakończony sukcesem',
+    'READY_TO_PLAY': 'Gotowy do gry',
+    'ROBOTS_MOVE_STARTED': 'Rozpoczęto ruch robota',
+    'ROBOTS_MOVE_ENDED': 'Ruch robota zakończony',
+    'PLAYERS_MOVE_STARTED': 'Oczekiwanie na ruch gracza',
+    'PLAYERS_MOVE_ENDED': 'Poprawnie odczytano ruch gracza',
+    'GAME_FINISHED': 'Gra skończona',
+    'INVALID_MOVE': 'Wykonano niepoprawny ruch',
+    'REMOVE_HAND' : 'Proszę zabrać rękę sprzed kamery'
 }
