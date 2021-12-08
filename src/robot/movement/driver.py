@@ -41,8 +41,8 @@ class MovementHandler(object):
         self.__servo_pwm.start(0)
 
         self.__pos = [0, 0]
-        self.__X_range = 0
-        self.__Y_range = 0
+        self.__X_range = [0, 0]
+        self.__Y_range = [0, 0]
         self.__calibrated = False
         self.__run = True
         self.__instr_list = []
@@ -117,6 +117,9 @@ class MovementHandler(object):
     def move_to_square(self, row, col):
         self.__instr_list.append(f'mts {row} {col}')
     
+    def move_to_corner(self, x, y):
+        self.__instr_list.append(f'mtc {x} {y}')
+
     def set_magnet(self, state):
         self.__instr_list.append(f'sm {state}')
 
@@ -164,6 +167,9 @@ class MovementHandler(object):
 
                     elif instr[0] == 'mts':
                         self.__move_to_square_inner(int(instr[1]), int(instr[2]))
+
+                    elif instr[0] == 'mtc':
+                        self.__move_to_corner_inner(int(instr[1]), int(instr[2]))
                     
                     elif instr[0] == 'sxf':
                         self.__step_X_forward_inner()
@@ -303,11 +309,11 @@ class MovementHandler(object):
         def __move_motor(motor_pin, steps, speed, steps_done):
             for i in range(steps):
                 steps_done[0] = i
-                if self.__interrupt:
-                    break
-                
                 while self.__pause:
                     time.sleep(.01)
+
+                if self.__interrupt:
+                    break
 
                 GPIO.output(motor_pin, GPIO.HIGH)
                 time.sleep(1./speed)
@@ -356,6 +362,91 @@ class MovementHandler(object):
             y_m*(driver_config.board_pos['y'][1] - driver_config.board_pos['y'][0])
 
         self.__move_to_pos_inner(x, y)
+    
+    def __move_to_corner_inner(self, x, y):
+        x = (-1, 1)[x > 0]
+        y = (-1, 1)[y > 0]
+
+        motor_to_move = None
+        dir_a = 0
+        dir_b = 0
+        if y == x:
+            dir_b = (-1, 1)[x > 0]
+            GPIO.output(driver_config.pin_motor_B_dir, GPIO.HIGH if dir_b > 0 else GPIO.LOW)
+            motor_to_move = 'B'
+        else:
+            dir_a = (-1, 1)[x > 0]
+            GPIO.output(driver_config.pin_motor_A_dir, GPIO.HIGH if dir_a > 0 else GPIO.LOW)
+            motor_to_move = 'A'
+        
+        endstop_x = (driver_config.pin_endstop_X_min, driver_config.pin_endstop_X_max)[x > 0]
+        endstop_y = (driver_config.pin_endstop_Y_min, driver_config.pin_endstop_Y_max)[y > 0]
+        motor_pin = (driver_config.pin_motor_A_step, driver_config.pin_motor_B_step)[motor_to_move == 'B']
+
+        endstop_triggered = None
+        steps_done = {'A': 0, 'B': 0}
+        while not self.__interrupt:
+            if GPIO.input(endstop_x):
+                endstop_triggered = 'x'
+                break
+
+            if GPIO.input(endstop_y):
+                endstop_triggered = 'y'
+                break
+
+            GPIO.output(motor_to_move, GPIO.HIGH)
+            time.sleep(1./self.__speed)
+            GPIO.output(motor_to_move, GPIO.LOW)
+            time.sleep(1./self.__speed)
+
+            steps_done[motor_to_move] += 1
+
+            while self.__pause:
+                time.sleep(.01)
+        
+        if motor_to_move == 'A':
+            if endstop_triggered == 'x':
+                dir_a = (-1, 1)[y < 0]
+            elif endstop_triggered == 'y':
+                dir_a = (-1, 1)[x > 0]
+            GPIO.output(driver_config.pin_motor_B_dir, GPIO.HIGH if dir_a > 0 else GPIO.LOW)
+        elif motor_to_move == 'B':
+            if endstop_triggered == 'x':
+                dir_b = (-1, 1)[y > 0]
+            elif endstop_triggered == 'y':
+                dir_b = (-1, 1)[x > 0]
+            GPIO.output(driver_config.pin_motor_A_dir, GPIO.HIGH if dir_b > 0 else GPIO.LOW)
+        
+        while not self.__interrupt:
+            if GPIO.input(endstop_x) and GPIO.input(endstop_y):
+                break
+
+            GPIO.output(driver_config.pin_motor_A_step, GPIO.HIGH)
+            GPIO.output(driver_config.pin_motor_B_step, GPIO.HIGH)
+            time.sleep(1./self.__speed)
+            GPIO.output(driver_config.pin_motor_A_step, GPIO.LOW)
+            GPIO.output(driver_config.pin_motor_B_step, GPIO.LOW)
+            time.sleep(1./self.__speed)
+
+            steps_done['A'] += 1
+            steps_done['B'] += 1
+
+            while self.__pause:
+                time.sleep(.01)
+
+        if self.__interrupt:
+            delta_a_done = steps_done['A']*dir_a
+            delta_b_done = steps_done['B']*dir_b
+
+            delta_x_done = (delta_b_done + delta_a_done)//2
+            delta_y_done = (delta_b_done - delta_a_done)//2
+
+            self.__pos[0] += delta_x_done
+            self.__pos[1] += delta_y_done
+
+        else:
+            self.__pos[0] = (0, self.__X_range)[x > 0]
+            self.__pos[1] = (0, self.__Y_range)[y > 0]
     
     def __set_magnet_inner(self, state):
         GPIO.output(driver_config.pin_magnet, GPIO.HIGH if state else GPIO.LOW)
