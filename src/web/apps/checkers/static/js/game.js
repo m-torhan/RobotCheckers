@@ -188,7 +188,7 @@ async function movePawn(move_list, output_board, taken_pawns) {
 async function addToast(content) {
     if (content !== '') {
         const d = new Date();
-        const timestamp = d.getUTCHours()+":"+d.getUTCMinutes()+":"+d.getUTCSeconds();
+        const timestamp = d.toLocaleTimeString();
         document.getElementsByClassName("toast-body")[0].innerText = content;
         document.getElementsByClassName("toast-timestamp")[0].innerText = timestamp;
         const toastDiv = document.getElementsByClassName("toast")[0].cloneNode(true);
