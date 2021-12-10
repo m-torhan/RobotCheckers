@@ -18,6 +18,8 @@ def get_best_move(checkers, depth):
 
 def minimax(node, checkers, depth, player_num):
     if checkers.end:
+        if checkers.winner == -1:
+            return 0
         return 1e10*(-1, 1)[checkers.winner == player_num]
     if depth == 0:
         return (checkers.board == (2*player_num + 1)).sum()\
