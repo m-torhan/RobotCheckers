@@ -13,14 +13,14 @@ def get_best_move(checkers, simulations):
     move_score = []
 
     for move in available_moves:
-        new_checkers = checkers.copy()
-        new_checkers.make_move(move, False)
 
         player_1 = ai_player.AIPlayerRandom(1 - player_num)
         player_2 = ai_player.AIPlayerRandom(player_num)
 
         s = 0
         for _ in range(simulations):
+            new_checkers = checkers.copy()
+            new_checkers.make_move(move, False)
             while not new_checkers.end:
                 if new_checkers.player_turn == player_1.num:
                     move, _, _ = player_1.make_move(new_checkers)
