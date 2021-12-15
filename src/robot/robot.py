@@ -163,6 +163,15 @@ class RobotCheckers(object):
             self.__play = False
             self.__checkers = None
 
+    def pause_robot(self):
+        self.__movement_handler.pause()
+
+    def unpause_robot(self):
+        self.__movement_handler.unpause()
+
+    def is_robot_paused(self):
+        return self.__movement_handler.pause_status
+
     def __robot_handler(self):
         # calibration
 

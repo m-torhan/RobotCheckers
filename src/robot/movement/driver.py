@@ -156,6 +156,10 @@ class MovementHandler(object):
     def unpause(self):
         self.__pause = False
 
+    @property
+    def pause_status(self):
+        return self.__pause
+
     def __instr_handler(self):
         while self.__run:
             if len(self.__instr_list):

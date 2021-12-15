@@ -52,9 +52,38 @@ class Game:
         return self.__consumer is not None
 
     def user_action(self, action):
-        if action is UserAction.END_GAME and self.is_game_running():
-            self.__run = False
-            self.__cleanup_requested = True
+        if not isinstance(action, UserAction):
+            return None
+
+        status = GameStatus.USER_ACTION_FAILURE
+        status_content = None
+
+        if action is UserAction.END_GAME:
+            if self.is_game_running():
+                self.__run = False
+                self.__cleanup_requested = True
+                status = GameStatus.USER_ACTION_SUCCESS
+                status_content = 'Rozgrywka została zakończona.'
+            else:
+                status_content = 'Brak trwajacej rozgrywki do zakończenia.'
+
+        if action is UserAction.STOP_ROBOT:
+            if not self.__robot.is_robot_paused():
+                self.__robot.pause_robot()
+                status = GameStatus.USER_ACTION_SUCCESS
+                status_content = 'Robot został zatrzymany'
+            else:
+                status_content = 'Robot został już poprzednio zatrzymany.'
+
+        if action is UserAction.RESUME_ROBOT:
+            if self.__robot.is_robot_paused():
+                self.__robot.unpause_robot()
+                status = GameStatus.USER_ACTION_SUCCESS
+                status_content = 'Robot został wznowiony.'
+            else:
+                status_content = 'Robot został już poprzednio wznowiony.'
+
+        self.send_game_status(status, status_content)
 
     def send_game_board_status(self):
         if self.is_consumer_set():
