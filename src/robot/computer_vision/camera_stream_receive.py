@@ -5,8 +5,8 @@ import pickle
 import numpy as np
 import struct ## new
 
-HOST = '192.168.1.23'
-PORT = 8090
+HOST = '192.168.1.5'
+PORT = 8089
 
 stream_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -15,7 +15,7 @@ if len(sys.argv) == 2:
     try:        
         PORT = int(sys.argv[1])
     except:
-        print('Incorrect PORT, trying on 8090')        
+        print('Incorrect PORT, trying on 8089')        
 
 stream_socket.connect((HOST, PORT))
 
