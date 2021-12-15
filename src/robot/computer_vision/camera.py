@@ -35,10 +35,10 @@ class CameraHandler(object):
         # figures and hand colors
         self.__colors = {
             'white': (255,)*3,
-            'blue' : (1, 1, 255),
+            'blue' : (255, 1, 1),
             'black': (1,)*3,
-            'red'  : (255, 1, 1),
-            'hand' : (255, 255, 1)
+            'red'  : (1, 1, 255),
+            'hand' : (1, 255, 255)
         }
 
         self.__colors_hsv_ranges = {
@@ -247,7 +247,7 @@ class CameraHandler(object):
                 w, h = stats[i][2], stats[i][3]
                 area = stats[i][4]
                 img_w, img_h = frame_filtered_colors[col].shape[0], frame_filtered_colors[col].shape[1]
-                if (col != 'hand' and (self.__sq_side//2 < w < self.__sq_side and self.__sq_side//2 < h < self.__sq_side and area > 3.14*(self.__sq_side//3)**2)) or\
+                if (col != 'hand' and (self.__sq_side//2 < w < self.__sq_side and self.__sq_side//2 < h < self.__sq_side and area > 3.14*(self.__sq_side//4)**2)) or\
                    (col == 'hand' and (w > self.__sq_side or h > self.__sq_side) and area < img_w*img_h/2):
                     objects_positions[col].append(
                         (centroids[i,0]/self.__sq_side,
@@ -286,7 +286,7 @@ class CameraHandler(object):
 
         frame_perp_crop = cv2.warpPerspective(frame, self.__warpPerspectiveMatrix, (self.__out_width, self.__out_height), flags=cv2.INTER_LINEAR)
 
-        frame_perp_crop_hsv = cv2.cvtColor(frame_perp_crop, cv2.COLOR_RGB2HSV)
+        frame_perp_crop_hsv = cv2.cvtColor(frame_perp_crop, cv2.COLOR_BGR2HSV)
 
         frame_filtered_colors = {}
 
