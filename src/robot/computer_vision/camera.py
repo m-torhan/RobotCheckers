@@ -240,19 +240,24 @@ class CameraHandler(object):
 
         for col in self.__colors_hsv_ranges.keys():
             objects_positions[col] = []
-            contours, _ = cv2.findContours(frame_filtered_colors[col], cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+            count, labels, stats, centroids = cv2.connectedComponentsWithStats(frame_filtered_colors[col])
 
-            for c in contours:
-                x, y, w, h = cv2.boundingRect(c)
-                if (col != 'hand' and (self.__sq_side//2 < w < self.__sq_side and self.__sq_side//2 < h < self.__sq_side)) or\
+            for i in range(count):
+                x, y = centroids[i,0], centroids[i,1]
+                w, h = stats[i][2], stats[i][3]
+                area = stats[i][4]
+                if (col != 'hand' and (self.__sq_side//2 < w < self.__sq_side and self.__sq_side//2 < h < self.__sq_side and area > 3.14*(self.__sq_side//2)**2)) or\
                    (col == 'hand' and (w > self.__sq_side or h > self.__sq_side)):
                     objects_positions[col].append(
-                        ((self.__bottom_right_corner[0] - (x + w/2))/self.__sq_side,
-                         (self.__bottom_right_corner[1] - (y + h/2))/self.__sq_side)
+                        (centroids[i,0]/self.__sq_side,
+                         centroids[i,1]/self.__sq_side)
                     )
 
                     if 0 != self.__debug_mode:
-                        cv2.rectangle(debug_img_rects, (x - 8, y - 8), (x + w + 8, y + h + 8), self.__colors[col], 2)
+                        cv2.rectangle(debug_img_rects, (int(x - 8),
+                                                        int(y - 8)),
+                                                       (int(x + w + 8),
+                                                        int(y + h + 8)), self.__colors[col], 2)
         
         if debug or 0 != self.__debug_mode:
             cv2.rectangle(debug_img_rects, (self.__board_range[0][0], self.__board_range[1][0]),
