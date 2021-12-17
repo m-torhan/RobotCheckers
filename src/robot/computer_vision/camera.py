@@ -12,6 +12,7 @@ import random
 import socket
 import pickle
 import struct
+import traceback
 
 import src.robot.computer_vision.camera_config as camera_config
 
@@ -26,6 +27,7 @@ class CameraHandler(object):
         self.__debug_thread = threading.Thread(target=self.__stream_handler)
         self.__debug_out = None
         self.__debug_frame = None
+        self.__frame_board_det = None
 
         # square size in pixels
         self.__sq_side = 64
@@ -35,15 +37,15 @@ class CameraHandler(object):
         # figures and hand colors
         self.__colors = {
             'white': (255,)*3,
-            'blue' : (255, 1, 1),
+            'blue' : (1, 1, 255),
             'black': (1,)*3,
-            'red'  : (1, 1, 255),
-            'hand' : (1, 255, 255)
+            'red'  : (255, 1, 1),
+            'hand' : (255, 255, 1)
         }
 
         self.__colors_hsv_ranges = {
-            'white': (np.array((  0,   0, 160), dtype=np.uint8),
-                      np.array((255,  55, 255), dtype=np.uint8)),
+            'white': (np.array((  0,   0, 200), dtype=np.uint8),
+                      np.array((255,  30, 255), dtype=np.uint8)),
             'blue':  (np.array(( 90,  90,  50), dtype=np.uint8),
                       np.array((120, 255, 255), dtype=np.uint8)),
             'black': (np.array((  0,   0,   0), dtype=np.uint8),
@@ -53,6 +55,11 @@ class CameraHandler(object):
             'hand':  (np.array((180,  40, 100), dtype=np.uint8),
                       np.array(( 30, 100, 220), dtype=np.uint8))
         }
+
+        self.__board_hsv_range = (
+            np.array((  40, 90, 100), dtype=np.uint8),
+            np.array(( 120, 255, 200), dtype=np.uint8)
+        )
 
         # gamearea and board positions
         x_min = px_per_cm*(camera_config.gamearea_size[0] - camera_config.board_size[0]) + self.__sq_side//2
@@ -240,25 +247,19 @@ class CameraHandler(object):
 
         for col in self.__colors_hsv_ranges.keys():
             objects_positions[col] = []
-            count, labels, stats, centroids = cv2.connectedComponentsWithStats(frame_filtered_colors[col])
+            contours, _ = cv2.findContours(frame_filtered_colors[col], cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
 
-            for i in range(count):
-                x, y = centroids[i,0], centroids[i,1]
-                w, h = stats[i][2], stats[i][3]
-                area = stats[i][4]
-                img_w, img_h = frame_filtered_colors[col].shape[0], frame_filtered_colors[col].shape[1]
-                if (col != 'hand' and (self.__sq_side//2 < w < self.__sq_side and self.__sq_side//2 < h < self.__sq_side and area > 3.14*(self.__sq_side//4)**2)) or\
-                   (col == 'hand' and (w > self.__sq_side or h > self.__sq_side) and area < img_w*img_h/2):
+            for c in contours:
+                x, y, w, h = cv2.boundingRect(c)
+                if (col != 'hand' and (self.__sq_side//2 < w < self.__sq_side and self.__sq_side//2 < h < self.__sq_side)) or\
+                   (col == 'hand' and (w > self.__sq_side*2 or h > self.__sq_side*2)):
                     objects_positions[col].append(
-                        (centroids[i,0]/self.__sq_side,
-                         centroids[i,1]/self.__sq_side)
+                        ((self.__bottom_right_corner[0] - (x + w/2))/self.__sq_side,
+                         (self.__bottom_right_corner[1] - (y + h/2))/self.__sq_side)
                     )
 
                     if 0 != self.__debug_mode:
-                        cv2.rectangle(debug_img_rects, (int(x - w/2 - 4),
-                                                        int(y - h/2 - 4)),
-                                                       (int(x + w/2 + 4),
-                                                        int(y + h/2 + 4)), self.__colors[col], 2)
+                        cv2.rectangle(debug_img_rects, (x - 8, y - 8), (x + w + 8, y + h + 8), self.__colors[col], 2)
         
         if debug or 0 != self.__debug_mode:
             cv2.rectangle(debug_img_rects, (self.__board_range[0][0], self.__board_range[1][0]),
@@ -286,7 +287,7 @@ class CameraHandler(object):
 
         frame_perp_crop = cv2.warpPerspective(frame, self.__warpPerspectiveMatrix, (self.__out_width, self.__out_height), flags=cv2.INTER_LINEAR)
 
-        frame_perp_crop_hsv = cv2.cvtColor(frame_perp_crop, cv2.COLOR_BGR2HSV)
+        frame_perp_crop_hsv = cv2.cvtColor(frame_perp_crop, cv2.COLOR_RGB2HSV)
 
         frame_filtered_colors = {}
 
@@ -322,9 +323,14 @@ class CameraHandler(object):
                             free_area_grad[:,:,0] = 0
 
                             self.__debug_frame = frame_with_positions_masked + free_area_grad
+
+                    elif self.__frame_board_det is not None:
+                        self.__debug_frame = self.__frame//2 + self.__frame_board_det[:,:,np.newaxis]//2
             
             if not self.initialized:
                 self.__initialize()
+            else:
+                self.__frame_board_det = None
             
             time.sleep(.05)
     
@@ -337,33 +343,20 @@ class CameraHandler(object):
         if 1 == self.__debug_mode and self.__debug_out is not None and self.__debug_out.isOpened():
             self.__debug_out.write(frame)
 
-        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # Convert to HSV format and color threshold
+        frame_hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
 
-        frame_gray_float = frame_gray.astype(np.float64)/255.
+        frame_board_filter = cv2.inRange(frame_hsv.astype(np.uint8), self.__board_hsv_range[0], self.__board_hsv_range[1])
+        self.__frame_board_det = frame_board_filter.copy()
 
-        frame_gray_float -= frame_gray_float.min()
-        frame_gray_float /= frame_gray_float.max()
-
-        frame_gray_norm = (255*frame_gray_float).astype(np.uint8)
-
-        _, frame_gray_norm_thresh_1 = cv2.threshold(frame_gray_norm, 32, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C)
-        _, frame_gray_norm_thresh_2 = cv2.threshold(frame_gray_norm, 100, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C)
-
-        frame_gray_norm_thresh = (255*(frame_gray_norm_thresh_2 - frame_gray_norm_thresh_1)).astype(np.uint8)
-        frame_gray_norm_thresh = 255 - frame_gray_norm_thresh
+        success, corners = cv2.findChessboardCorners(255 - frame_board_filter, (7, 7), None)
         
-        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-        
-        try:
-            _, corners = cv2.findChessboardCorners(frame_gray_norm_thresh, (7, 7), None)
-            corners2 = cv2.cornerSubPix(frame_gray_norm_thresh, corners, (11, 11), (-1, -1), criteria)
-        except:
+        if not success:
             return None
 
-        corners2 = list(map(lambda c: c[0], corners))
+        corners = list(map(lambda c: c[0], corners))
 
-        in_pts = np.float32([corners2[42], corners2[0], corners2[6], corners2[48]])
+        in_pts = np.float32([corners[42], corners[0], corners[6], corners[48]])
 
         out_pts = np.float32([
             [self.__board_range[0][0] + self.__sq_side, self.__board_range[1][0] + self.__sq_side],
@@ -375,7 +368,7 @@ class CameraHandler(object):
         self.__warpPerspectiveMatrix = cv2.getPerspectiveTransform(in_pts, out_pts)
 
     def __stream_handler(self):
-        ip_address = 'localhost'
+        ip_address = '192.168.1.5'
 
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -396,6 +389,7 @@ class CameraHandler(object):
                 break
             except:
                 pass
+            
         stream_socket.listen(10)
         stream_socket.settimeout(1)
 
@@ -413,7 +407,7 @@ class CameraHandler(object):
 
                         if frame is not None:
                             data = pickle.dumps(frame)
-                            conn.sendall(struct.pack('L', len(data)) + data)
+                            conn.sendall(struct.pack('<L', len(data)) + data)
 
                     except:
                         break
