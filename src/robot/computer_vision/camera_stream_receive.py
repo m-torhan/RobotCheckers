@@ -20,7 +20,7 @@ if len(sys.argv) == 2:
 stream_socket.connect((HOST, PORT))
 
 data = bytes()
-payload_size = struct.calcsize('L') 
+payload_size = struct.calcsize('<L')
 
 i = 0
 while True:
@@ -30,7 +30,7 @@ while True:
             data += stream_socket.recv(4096)
         packed_msg_size = data[:payload_size]
         data = data[payload_size:]
-        msg_size = struct.unpack('L', packed_msg_size)[0]
+        msg_size = struct.unpack('<L', packed_msg_size)[0]
         print(f'size={msg_size} ', end='')
         print(f'Receiving frame {i}... ', end='')
         while len(data) < msg_size:
