@@ -16,3 +16,5 @@ class GameStatus(ExtendedEnum):
     GAME_FINISHED = auto()
     INVALID_MOVE = auto()
     REMOVE_HAND = auto()
+    USER_ACTION_SUCCESS = auto()
+    USER_ACTION_FAILURE = auto()
