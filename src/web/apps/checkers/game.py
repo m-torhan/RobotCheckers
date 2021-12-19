@@ -109,6 +109,7 @@ class Game:
             self.__consumer.group_send_game_status(game_status, game_status.name) #debug game_status.name, else content
 
     def __cleanup(self):
+        self.__robot.abort_game()
         self.__settings.clear_all()
         self.__consumer = None
 
@@ -127,6 +128,9 @@ class Game:
 
         while True:
             if not self.__run:
+                if self.__cleanup_requested:
+                    self.__cleanup()
+                    self.__cleanup_requested = False
                 sleep(1)
             else:
                 self.send_game_status(GameStatus.BOARD_PREPARATION_STARTED)
@@ -164,11 +168,6 @@ class Game:
                             content += "wygrał gracz1"
                         elif winner == Winner.PLAYER2:
                             content += "wygrał gracz2"
-                    self.__robot.abort_game()
                     self.send_game_status(GameStatus.GAME_FINISHED, content)
                     self.__run = False
-                if not self.__run:
-                    if self.__cleanup_requested:
-                        self.__cleanup()
-                        self.__cleanup_requested = False
-                    # self.__robot.new_game()?
+                    self.__cleanup_requested = True
