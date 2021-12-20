@@ -162,6 +162,10 @@ class RobotCheckers(object):
         if self.__checkers is not None:
             self.__play = False
             self.__checkers = None
+            self.__movement_handler.interrupt()
+            time.sleep(1) #wait for instruction list to empty
+            self.__movement_handler.put_pawn()
+            self.__movement_handler.move_to_corner(1, -1)
 
     def pause_robot(self):
         self.__movement_handler.pause()
