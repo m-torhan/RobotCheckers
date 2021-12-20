@@ -164,11 +164,9 @@ class RobotCheckers(object):
             self.__checkers = None
             self.__movement_handler.interrupt()
             while not self.__movement_handler.all_done:
-                print('waiting for interrupt to finish')
                 time.sleep(1)
             self.__movement_handler.put_pawn()
             self.__movement_handler.move_to_corner(1, -1)
-            print('moved to corner')
 
     def pause_robot(self):
         self.__movement_handler.pause()

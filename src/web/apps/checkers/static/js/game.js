@@ -252,5 +252,6 @@ const status_dict = {
     'GAME_FINISHED': 'Gra skończona',
     'INVALID_MOVE': 'Wykonano niepoprawny ruch',
     'REMOVE_HAND' : 'Proszę zabrać rękę sprzed kamery',
-    'USER_ACTION_SUCCESS' : 'Akcja wykonana pomyślnie'
+    'USER_ACTION_SUCCESS' : 'Akcja wykonana pomyślnie',
+    'USER_ACTION_FAILURE' : 'Wykonanie akcji nie powiodło się'
 }
