@@ -163,9 +163,12 @@ class RobotCheckers(object):
             self.__play = False
             self.__checkers = None
             self.__movement_handler.interrupt()
-            time.sleep(1) #wait for instruction list to empty
+            while not self.__movement_handler.all_done:
+                print('waiting for interrupt to finish')
+                time.sleep(1)
             self.__movement_handler.put_pawn()
             self.__movement_handler.move_to_corner(1, -1)
+            print('moved to corner')
 
     def pause_robot(self):
         self.__movement_handler.pause()
@@ -193,7 +196,7 @@ class RobotCheckers(object):
                 # no game to play
                 continue
             
-            while not self.__checkers.end:
+            while self.__checkers is not None and not self.__checkers.end:
                 time.sleep(.1)
                 if self.__checkers is None:
                     break

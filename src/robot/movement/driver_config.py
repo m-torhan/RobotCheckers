@@ -17,7 +17,7 @@ servo_up          = 99
 
 steps_per_cm      = 50
 
-max_speed         = 1600
+max_speed         = 1400
 acceleration      = 10
 
 board_pos         = {'x': (-1.5, 22.5), 'y': (10, 34)}

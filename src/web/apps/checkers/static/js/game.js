@@ -223,6 +223,9 @@ let UserActions = {
 function sendUserAction(type) {
     webSocket.send(JSON.stringify({'type': 'user_action', 'message': {'content': type}}));
     addToast(UserActions[type]);
+    if(type==='end_game'){
+        document.getElementById('endGame').classList.add('disabled');
+    }
 }
 
 function websocketConnectionStatus(){
@@ -248,5 +251,6 @@ const status_dict = {
     'PLAYERS_MOVE_ENDED': 'Poprawnie odczytano ruch gracza',
     'GAME_FINISHED': 'Gra skończona',
     'INVALID_MOVE': 'Wykonano niepoprawny ruch',
-    'REMOVE_HAND' : 'Proszę zabrać rękę sprzed kamery'
+    'REMOVE_HAND' : 'Proszę zabrać rękę sprzed kamery',
+    'USER_ACTION_SUCCESS' : 'Akcja wykonana pomyślnie'
 }

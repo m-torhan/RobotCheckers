@@ -219,6 +219,7 @@ class MovementHandler(object):
 
                     if self.__interrupt:
                         self.__instr_list.clear()
+                        print('mh running again')
                         self.__interrupt = False
 
                 except Exception as ex:
