@@ -22,3 +22,17 @@ e.g.
 sudo python3 src/web/manage.py runserver 192.168.1.5:80
 ```
 
+## Robot 3D model
+![render](imgs/render.png)
+
+## Connection diagram
+![connections](imgs/connections.png)
+
+## Web GUI
+![gui](imgs/gui.jpeg)
+
+## Figures detection preview
+![cv](imgs/cv.png)
+
+## Robot play
+![game](imgs/game.gif)
